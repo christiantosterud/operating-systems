@@ -28,8 +28,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wshadow -Werror")
 # Compile the the tester executable.
 add_executable(${PROJECT_NAME}_test ......)
 
-# Enable grad/bonus tests by setting the variable to 1
-target_compile_definitions(${PROJECT_NAME}_test PRIVATE GRAD_TESTS=0)
+target_compile_definitions(${PROJECT_NAME}_test PRIVATE)
 
 # Link ${PROJECT_NAME}_test with dyn_array and gtest and pthread libraries
 target_link_libraries(${PROJECT_NAME}_test gtest pthread dyn_array)

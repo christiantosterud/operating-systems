@@ -23,10 +23,10 @@ class GradeEnvironment : public testing::Environment
         virtual void SetUp() 
         {
             score = 0;
-            total = 160;
+            total = 210;
         }
 
-        virtual void TearDown() i
+        virtual void TearDown()
         {
             ::testing::Test::RecordProperty("points_given", score);
             ::testing::Test::RecordProperty("points_total", total);

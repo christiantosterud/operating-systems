@@ -46,6 +46,12 @@ extern "C"
     // \return true if function ran successful else false for an error
     bool shortest_job_first(dyn_array_t *ready_queue, ScheduleResult_t *result);
 
+    // Runs the Priority algorithm over the incoming ready_queue
+    // \param ready queue a dyn_array of type ProcessControlBlock_t that contain be up to N elements
+    // \param result used for shortest job first stat tracking \ref ScheduleResult_t
+    // \return true if function ran successful else false for an error
+    bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result);
+
     // Runs the Round Robin Process Scheduling algorithm over the incoming ready_queue
     // \param ready queue a dyn_array of type ProcessControlBlock_t that contain be up to N elements
     // \param result used for round robin stat tracking \ref ScheduleResult_t

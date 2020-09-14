@@ -7,6 +7,10 @@
 #include "processing_scheduling.h"
 
 
+// You might find this handy.  I put it around unused parameters, but you should
+// remove it before you submit. Just allows things to compile initially.
+#define UNUSED(x) (void)(x)
+
 // private function
 void virtual_cpu(ProcessControlBlock_t *process_control_block) 
 {
@@ -16,35 +20,42 @@ void virtual_cpu(ProcessControlBlock_t *process_control_block)
 
 bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    // You need to remove this when you begin implementation.
-    abort();  // replace me with implementation.
+    UNUSED(ready_queue);
+    UNUSED(result);
     return false;
 }
 
 bool shortest_job_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    // You need to remove this when you begin implementation.
-    abort();  // replace me with implementation.
+    UNUSED(ready_queue);
+    UNUSED(result);
+    return false;   
+}
+
+bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result) 
+{
+    UNUSED(ready_queue);
+    UNUSED(result);
     return false;   
 }
 
 bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) 
 {
-    // You need to remove this when you begin implementation.
-    abort();  // replace me with implementation.
+    UNUSED(ready_queue);
+    UNUSED(result);
+    UNUSED(quantum);
     return false;
 }
 
 dyn_array_t *load_process_control_blocks(const char *input_file) 
 {
-    // You need to remove this when you begin implementation.
-    abort();  // replace me with implementation.
+    UNUSED(input_file);
     return NULL;
 }
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    // You need to remove this when you begin implementation.
-    abort();  // replace me with implementation.
+    UNUSED(ready_queue);
+    UNUSED(result);
     return false;
 }

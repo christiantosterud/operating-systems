@@ -6,7 +6,8 @@
 // these are just ideas
 // typedef enum {NONE = 0x00, SHRUNK = 0x01, SORTED = 0x02, ALL = 0xFF} DYN_FLAGS;
 
-struct dyn_array {
+struct dyn_array 
+{
     // DYN_FLAGS flags;
     size_t capacity;
     size_t size;
@@ -45,14 +46,18 @@ bool dyn_shift_remove(dyn_array_t *const dyn_array, const size_t position, const
 
 
 
-dyn_array_t *dyn_array_create(const size_t capacity, const size_t data_type_size, void (*destruct_func)(void *)) {
-    if (data_type_size && capacity <= DYN_MAX_CAPACITY) {
+dyn_array_t *dyn_array_create(const size_t capacity, const size_t data_type_size, void (*destruct_func)(void *)) 
+{
+    if (data_type_size && capacity <= DYN_MAX_CAPACITY) 
+    {
         dyn_array_t *dyn_array = (dyn_array_t *) malloc(sizeof(dyn_array_t));
-        if (dyn_array) {
+        if (dyn_array) 
+        {
             // would have inf loop if requested size was between DYN_MAX_CAPACITY
             // and SIZE_MAX
             size_t actual_capacity = 16;
-            while (capacity > actual_capacity) {
+            while (capacity > actual_capacity) 
+            {
                 actual_capacity <<= 1;
             }
 
@@ -69,7 +74,8 @@ dyn_array_t *dyn_array_create(const size_t capacity, const size_t data_type_size
                                               malloc(data_type_size * actual_capacity), destruct_func}),
                    sizeof(dyn_array_t));
 
-            if (dyn_array->array) {
+            if (dyn_array->array) 
+            {
                 // other malloc worked, yay!
                 // we're done?
                 return dyn_array;
@@ -82,14 +88,18 @@ dyn_array_t *dyn_array_create(const size_t capacity, const size_t data_type_size
 
 // Creates a dynamic array from a standard array
 dyn_array_t *dyn_array_import(const void *const data, const size_t count, const size_t data_type_size,
-                              void (*destruct_func)(void *)) {
+                              void (*destruct_func)(void *)) 
+{
     // literally could not give us an overlapping pointer unless they guessed it
     // I'd just do a memcpy here instead of dyn_shift, but the dyn_shift branch for this is
     // short. DYN_SHIFT CANNOT fail if create worked properly, but we'll cleanup if it did anyway
-    if (data && count) {
+    if (data && count) 
+    {
         dyn_array_t *dyn_array = dyn_array_create(count, data_type_size, destruct_func);
-        if (dyn_array) {
-            if (dyn_shift_insert(dyn_array, 0, count, MODE_INSERT, data)) {
+        if (dyn_array) 
+        {
+            if (dyn_shift_insert(dyn_array, 0, count, MODE_INSERT, data)) 
+            {
                 return dyn_array;
             }
             dyn_array_destroy(dyn_array);
@@ -101,11 +111,13 @@ dyn_array_t *dyn_array_import(const void *const data, const size_t count, const 
 // TODO: Change this?
 // Maybe do a copy of all the data to some given array?
 // exporting then changing isn't safe since it's all the same data
-const void *dyn_array_export(const dyn_array_t *const dyn_array) {
+const void *dyn_array_export(const dyn_array_t *const dyn_array) 
+{
     return dyn_array_front(dyn_array);
 }
 
-void dyn_array_destroy(dyn_array_t *dyn_array) {
+void dyn_array_destroy(dyn_array_t *dyn_array) 
+{
     if (dyn_array) {
         dyn_array_clear(dyn_array);
         free(dyn_array->array);
@@ -116,8 +128,10 @@ void dyn_array_destroy(dyn_array_t *dyn_array) {
 
 
 
-void *dyn_array_front(const dyn_array_t *const dyn_array) {
-    if (dyn_array && dyn_array->size) {
+void *dyn_array_front(const dyn_array_t *const dyn_array) 
+{
+    if (dyn_array && dyn_array->size) 
+    {
         // If array is null, well, this is ok, because it's null
         // but if array is broken, well, we can't help that
         // nor can we detect that, so I guess it's not an error
@@ -126,96 +140,114 @@ void *dyn_array_front(const dyn_array_t *const dyn_array) {
     return NULL;
 }
 
-bool dyn_array_push_front(dyn_array_t *const dyn_array, const void *const object) {
+bool dyn_array_push_front(dyn_array_t *const dyn_array, const void *const object) 
+{
     return dyn_shift_insert(dyn_array, 0, 1, MODE_INSERT, object);
 }
 
-bool dyn_array_pop_front(dyn_array_t *const dyn_array) {
+bool dyn_array_pop_front(dyn_array_t *const dyn_array) 
+{
     return dyn_shift_remove(dyn_array, 0, 1, MODE_ERASE, NULL);
 }
 
-bool dyn_array_extract_front(dyn_array_t *const dyn_array, void *const object) {
+bool dyn_array_extract_front(dyn_array_t *const dyn_array, void *const object) 
+{
     return dyn_shift_remove(dyn_array, 0, 1, MODE_EXTRACT, object);
 }
 
 
 
 
-void *dyn_array_back(const dyn_array_t *const dyn_array) {
-    if (dyn_array && dyn_array->size) {
+void *dyn_array_back(const dyn_array_t *const dyn_array) 
+{
+    if (dyn_array && dyn_array->size) 
+    {
         return DYN_ARRAY_POSITION(dyn_array, dyn_array->size - 1);
     }
     return NULL;
 }
 
-bool dyn_array_push_back(dyn_array_t *const dyn_array, const void *const object) {
+bool dyn_array_push_back(dyn_array_t *const dyn_array, const void *const object) 
+{
     return dyn_array && dyn_shift_insert(dyn_array, dyn_array->size, 1, MODE_INSERT, (void *const) object);
 }
 
-bool dyn_array_pop_back(dyn_array_t *const dyn_array) {
+bool dyn_array_pop_back(dyn_array_t *const dyn_array) 
+{
     // Assert size because rollunder is scary, (though it should be handled correctly)
     return dyn_array && dyn_array->size && dyn_shift_remove(dyn_array, dyn_array->size - 1, 1, MODE_ERASE, NULL);
 }
 
-bool dyn_array_extract_back(dyn_array_t *const dyn_array, void *const object) {
+bool dyn_array_extract_back(dyn_array_t *const dyn_array, void *const object) 
+{
     // Assert size because rollunder is scary, (though it should be handled correctly)
     return dyn_array && dyn_array->size && dyn_shift_remove(dyn_array, dyn_array->size - 1, 1, MODE_EXTRACT, object);
 }
 
 
-
-
-void *dyn_array_at(const dyn_array_t *const dyn_array, const size_t index) {
-    if (dyn_array && index < dyn_array->size) {
+void *dyn_array_at(const dyn_array_t *const dyn_array, const size_t index) 
+{
+    if (dyn_array && index < dyn_array->size) 
+    {
         return DYN_ARRAY_POSITION(dyn_array, index);
     }
     return NULL;
 }
 
-bool dyn_array_insert(dyn_array_t *const dyn_array, const size_t index, const void *const object) {
+bool dyn_array_insert(dyn_array_t *const dyn_array, const size_t index, const void *const object) 
+{
     // putting object at INDEX
     // so we shift a gap at INDEX
     return object && dyn_shift_insert(dyn_array, index, 1, MODE_INSERT, object);
 }
 
-bool dyn_array_erase(dyn_array_t *const dyn_array, const size_t index) {
+bool dyn_array_erase(dyn_array_t *const dyn_array, const size_t index) 
+{
     return dyn_shift_remove(dyn_array, index, 1, MODE_ERASE, NULL);
 }
 
-bool dyn_array_extract(dyn_array_t *const dyn_array, const size_t index, void *const object) {
+bool dyn_array_extract(dyn_array_t *const dyn_array, const size_t index, void *const object) 
+{
     return dyn_array && object && dyn_array->size > index
            && dyn_shift_remove(dyn_array, index, 1, MODE_EXTRACT, object);
 }
 
 
-
-
-void dyn_array_clear(dyn_array_t *const dyn_array) {
-    if (dyn_array && dyn_array->size) {
+void dyn_array_clear(dyn_array_t *const dyn_array) 
+{
+    if (dyn_array && dyn_array->size) 
+    {
         dyn_shift_remove(dyn_array, 0, dyn_array->size, MODE_ERASE, NULL);
     }
 }
 
-bool dyn_array_empty(const dyn_array_t *const dyn_array) {
+bool dyn_array_empty(const dyn_array_t *const dyn_array) 
+{
     return dyn_array_size(dyn_array) == 0;
 }
 
-size_t dyn_array_size(const dyn_array_t *const dyn_array) {
-    if (dyn_array) {
+size_t dyn_array_size(const dyn_array_t *const dyn_array) 
+{
+    if (dyn_array) 
+    {
         return dyn_array->size;
     }
     return 0;  // hmmmmm...
 }
 
-size_t dyn_array_capacity(const dyn_array_t *const dyn_array) {
-    if (dyn_array) {
+size_t dyn_array_capacity(const dyn_array_t *const dyn_array) 
+{
+    if (dyn_array) 
+    {
         return dyn_array->capacity;
     }
     return 0;  // hmmmmm...
 }
 
-size_t dyn_array_data_size(const dyn_array_t *const dyn_array) {
-    if (dyn_array) {
+size_t dyn_array_data_size(const dyn_array_t *const dyn_array) 
+{
+    if (dyn_array) 
+    {
         return dyn_array->data_size;
     }
     return 0;  // hmmmmm...
@@ -223,10 +255,12 @@ size_t dyn_array_data_size(const dyn_array_t *const dyn_array) {
 
 
 
-bool dyn_array_sort(dyn_array_t *const dyn_array, int (*const compare)(const void *, const void *)) {
+bool dyn_array_sort(dyn_array_t *const dyn_array, int (*const compare)(const void *, const void *)) 
+{
     // hah, turns out there's a quicksort in cstdlib.
     // and it works exactly like we want it to
-    if (dyn_array && dyn_array->size && compare) {
+    if (dyn_array && dyn_array->size && compare) 
+    {
         qsort(dyn_array->array, dyn_array->size, dyn_array->data_size, compare);
         return true;
     }
@@ -235,12 +269,16 @@ bool dyn_array_sort(dyn_array_t *const dyn_array, int (*const compare)(const voi
 
 
 bool dyn_array_insert_sorted(dyn_array_t *const dyn_array, const void *const object,
-                             int (*const compare)(const void *, const void *)) {
-    if (dyn_array && compare && object) {
+                             int (*const compare)(const void *, const void *)) 
+{
+    if (dyn_array && compare && object) 
+    {
         size_t ordered_position = 0;
-        if (dyn_array->size) {
+        if (dyn_array->size) 
+        {
             while (ordered_position < dyn_array->size
-                   && compare(object, DYN_ARRAY_POSITION(dyn_array, ordered_position)) > 0) {
+                   && compare(object, DYN_ARRAY_POSITION(dyn_array, ordered_position)) > 0) 
+            {
                 ++ordered_position;
             }
         }
@@ -250,8 +288,10 @@ bool dyn_array_insert_sorted(dyn_array_t *const dyn_array, const void *const obj
 }
 
 
-bool dyn_array_for_each(dyn_array_t *const dyn_array, void (*const func)(void *const, void *), void *arg) {
-    if (dyn_array && dyn_array->array && func) {
+bool dyn_array_for_each(dyn_array_t *const dyn_array, void (*const func)(void *const, void *), void *arg) 
+{
+    if (dyn_array && dyn_array->array && func) 
+    {
         // So I just noticed we never check the data array ever
         // Which is both unsafe and potentially undefined behavior
         // Although we're the only ones that touch the pointer and we always validate it.
@@ -261,7 +301,8 @@ bool dyn_array_for_each(dyn_array_t *const dyn_array, void (*const func)(void *c
         // but good for the tester. But the tester may not trigger this if it's a crazy edge case.
         // HMMMMMMMMM...
         uint8_t *data_walker = (uint8_t *) dyn_array->array;
-        for (size_t idx = 0; idx < dyn_array->size; ++idx, data_walker += dyn_array->data_size) {
+        for (size_t idx = 0; idx < dyn_array->size; ++idx, data_walker += dyn_array->data_size) 
+        {
             func((void *const) data_walker, arg);
         }
         return true;
@@ -307,13 +348,17 @@ bool dyn_request_size_increase(dyn_array_t *const dyn_array, const size_t increm
 // (and then inserted)
 // [A][B][F][C][D][E]
 bool dyn_shift_insert(dyn_array_t *const dyn_array, const size_t position, const size_t count,
-                      const DYN_SHIFT_MODE mode, const void *const data_src) {
-    if (dyn_array && count && mode == MODE_INSERT && data_src) {
+                      const DYN_SHIFT_MODE mode, const void *const data_src) 
+{
+    if (dyn_array && count && mode == MODE_INSERT && data_src) 
+    {
         // may or may not need to increase capacity.
         // We'll ask the capacity function if we can do it.
         // If we can, do it. If not... Too bad for the user.
-        if (position <= dyn_array->size && dyn_request_size_increase(dyn_array, count)) {
-            if (position != dyn_array->size) {  // wasn't a gap at the end, we need to move data
+        if (position <= dyn_array->size && dyn_request_size_increase(dyn_array, count)) 
+        {
+            if (position != dyn_array->size) 
+            {  // wasn't a gap at the end, we need to move data
                 memmove(DYN_ARRAY_POSITION(dyn_array, position + count), DYN_ARRAY_POSITION(dyn_array, position),
                         DYN_SIZE_N_ELEMS(dyn_array, dyn_array->size - position));
             }
@@ -331,30 +376,41 @@ bool dyn_shift_insert(dyn_array_t *const dyn_array, const size_t position, const
 //       <---- 1
 // [A][B][C][D][E][?]
 bool dyn_shift_remove(dyn_array_t *const dyn_array, const size_t position, const size_t count,
-                      const DYN_SHIFT_MODE mode, void *const data_dst) {
+                      const DYN_SHIFT_MODE mode, void *const data_dst) 
+{
     if (dyn_array && count && dyn_array->size && MODE_IS_TYPE(mode, TYPE_REMOVE)  // mode = MODE_EXTRACT || MODE_ERASE
-        && (position + count) <= dyn_array->size) {                               // verify size and range
+        && (position + count) <= dyn_array->size)   // verify size and range
+{ 
 
         // shrinking in size
         // nice and simple (?)
-        if (mode == MODE_ERASE) {
-            if (dyn_array->destructor) {  // erasing AND have deconstructor
+        if (mode == MODE_ERASE) 
+        {
+            if (dyn_array->destructor) // erasing AND have deconstructor
+            {
                 uint8_t *arr_pos = DYN_ARRAY_POSITION(dyn_array, position);
-                for (size_t total = count; total; --total, arr_pos += dyn_array->data_size) {
+                for (size_t total = count; total; --total, arr_pos += dyn_array->data_size) 
+                {
                     dyn_array->destructor(arr_pos);
                 }
             }
-        } else {  // extracting data
-            if (data_dst) {
+        } 
+        else 
+        {  // extracting data
+            if (data_dst) 
+            {
                 memcpy(data_dst, DYN_ARRAY_POSITION(dyn_array, position), dyn_array->data_size * count);
-            } else {
+            } 
+            else 
+            {
                 return false;  // Extract with no dest??
             }
         }
         // pointer arithmatic on void pointers is illegal nowadays :C
         // GCC allows it for compatability, other provide it for GCC compatability. Way to implement a standard.
         // It should be cast to some sort of byte pointer, which is a pain. Hooray for macros
-        if (position + count < dyn_array->size) {
+        if (position + count < dyn_array->size) 
+        {
             // there's a actual gap, not just a hole to make at the end
             memmove(DYN_ARRAY_POSITION(dyn_array, position), DYN_ARRAY_POSITION(dyn_array, position + count),
                     DYN_SIZE_N_ELEMS(dyn_array, dyn_array->size - (position + count)));
@@ -366,14 +422,17 @@ bool dyn_shift_remove(dyn_array_t *const dyn_array, const size_t position, const
     return false;
 }
 
-bool dyn_request_size_increase(dyn_array_t *const dyn_array, const size_t increment) {
+bool dyn_request_size_increase(dyn_array_t *const dyn_array, const size_t increment) 
+{
     // check to see if the size can be increased by the increment
     // and increase capacity if need be
     // average case will be perfectly fine, single increment
-    if (dyn_array) {
+    if (dyn_array) 
+    {
         // if (!ADDITION_MAY_OVERFLOW(dyn_array->size, increment)) {
         // increment is ok, but is the capacity?
-        if (dyn_array->capacity >= (dyn_array->size + increment)) {
+        if (dyn_array->capacity >= (dyn_array->size + increment)) 
+        {
             // capacity is ok!
             return true;
         }
@@ -382,9 +441,11 @@ bool dyn_request_size_increase(dyn_array_t *const dyn_array, const size_t increm
 
         // INSERT SHRINK_TO_FIT CORRECTION HERE
 
-        if (needed_size <= DYN_MAX_CAPACITY) {
+        if (needed_size <= DYN_MAX_CAPACITY) 
+        {
             size_t new_capacity = dyn_array->capacity << 1;
-            while (new_capacity < needed_size) {
+            while (new_capacity < needed_size) 
+            {
                 new_capacity <<= 1;
             }
 
@@ -392,7 +453,8 @@ bool dyn_request_size_increase(dyn_array_t *const dyn_array, const size_t increm
             // if (!MULTIPLY_MAY_OVERFLOW(new_capacity, dyn_array->data_size)) {
             // we won't overflow, so we can at least REQUEST this change
             void *new_array = realloc(dyn_array->array, new_capacity * dyn_array->data_size);
-            if (new_array) {
+            if (new_array) 
+            {
                 // success! Wasn't that easy?
                 dyn_array->array    = new_array;
                 dyn_array->capacity = new_capacity;
