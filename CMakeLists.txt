@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 # ALL OF THE SPECIFIED NAMES IN THIS CMAKE ARE REQUIRED.
 # Set the project name variable to assignment3.
 # THIS IS REQUIRED
-project(assignment3)
+project(hw2)
 
 # Add your CMAKE_C_FLAGS AND CMAKE_CXX_FLAGS here
 # Make SURE to use -std=c11 and -std=c++11 where relevant.
