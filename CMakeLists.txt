@@ -22,13 +22,13 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 add_library(dyn_array src/dyn_array.c)
 
 # Compile the analysis executable.
-add_executable(analysis_test src/analysis.c)
+add_executable(analysis src/analysis.c)
 
 # link the dyn_array library we compiled against our analysis executable.
-target_link_libraries(analysis_test dyn_array)
+target_link_libraries(analysis dyn_array)
 
 # Compile the the tester executable.
-add_executable(${PROJECT_NAME}_test test/tests.cpp)
+add_executable(${PROJECT_NAME}_test test/tests.cpp src/process_scheduling.c)
 
 target_compile_definitions(${PROJECT_NAME}_test PRIVATE)
 
