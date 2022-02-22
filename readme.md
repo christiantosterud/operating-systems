@@ -1,5 +1,5 @@
 # Assignment 2
-# Beocat 
+# Trevor
 # Edited by: Kevin Sutcliffe
 
 Milestone 0: CMake and Unit Testing filled out. 
