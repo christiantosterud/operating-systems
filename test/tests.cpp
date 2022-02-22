@@ -54,11 +54,18 @@ TEST (load_process_control_blocks, NonExistingInputFilename)
 TEST (first_come_first_serve, NullQueue) 
 {
     dyn_array_t *readyqueue = NULL;
-    ScheduleResult_t *result = NULL;
+    ScheduleResult_t *result = (ScheduleResult_t*)malloc(sizeof(ScheduleResult_t));
     bool res = first_come_first_serve(readyqueue, result);
     EXPECT_EQ(false, res);
 }
 
+TEST (first_come_first_serve, NullResult)
+{
+    dyn_array_t *readyqueue = (dyn_array_t*)malloc(sizeof(ScheduleResult_t));
+    ScheduleResult_t *result = NULL;
+    bool res = first_come_first_serve(readyqueue, result);
+    EXPECT_EQ(false, res);
+}
 
 
 
@@ -69,6 +76,14 @@ TEST (first_come_first_serve, NullQueue)
 TEST (shortest_job_first, NullQueue) 
 {
     dyn_array_t *readyqueue = NULL;
+    ScheduleResult_t *result = (ScheduleResult_t*)malloc(sizeof(ScheduleResult_t));
+    bool res = shortest_job_first(readyqueue, result);
+    EXPECT_EQ(false, res);
+}
+
+TEST (shortest_job_first, NullResult)
+{
+    dyn_array_t *readyqueue = (dyn_array_t*)malloc(sizeof(ScheduleResult_t));
     ScheduleResult_t *result = NULL;
     bool res = shortest_job_first(readyqueue, result);
     EXPECT_EQ(false, res);
@@ -81,6 +96,14 @@ TEST (shortest_job_first, NullQueue)
 TEST (priority, NullQueue) 
 {
     dyn_array_t *readyqueue = NULL;
+    ScheduleResult_t *result = (ScheduleResult_t*)malloc(sizeof(ScheduleResult_t));
+    bool res = priority(readyqueue, result);
+    EXPECT_EQ(false, res);
+}
+
+TEST (priority, NullResult)
+{
+    dyn_array_t *readyqueue = (dyn_array_t*)malloc(sizeof(ScheduleResult_t));
     ScheduleResult_t *result = NULL;
     bool res = priority(readyqueue, result);
     EXPECT_EQ(false, res);
@@ -93,11 +116,20 @@ TEST (priority, NullQueue)
 TEST (round_robin, NullQueue) 
 {
     dyn_array_t *readyqueue = NULL;
-    ScheduleResult_t *result = NULL;
-    size_t quantum = 5;
-    bool res = round_robin(readyqueue, result, quantum);
+    ScheduleResult_t *result = (ScheduleResult_t*)malloc(sizeof(ScheduleResult_t));
+    bool res = round_robin(readyqueue, result, QUANTUM);
     EXPECT_EQ(false, res);
 }
+
+TEST (round_robin, NullResult)
+{
+    dyn_array_t *readyqueue = (dyn_array_t*)malloc(sizeof(ScheduleResult_t));
+    ScheduleResult_t *result = NULL;
+    bool res = round_robin(readyqueue, result, QUANTUM);
+    EXPECT_EQ(false, res);
+}
+
+
 
 /*
 * SHORTEST TIME REMAINING TESTS
@@ -106,6 +138,14 @@ TEST (round_robin, NullQueue)
 TEST (shortest_remaining_time_first, NullQueue) 
 {
     dyn_array_t *readyqueue = NULL;
+    ScheduleResult_t *result = (ScheduleResult_t*)malloc(sizeof(ScheduleResult_t));
+    bool res = shortest_remaining_time_first(readyqueue, result);
+    EXPECT_EQ(false, res);
+}
+
+TEST (shortest_remaining_time_first, NullResult)
+{
+    dyn_array_t *readyqueue = (dyn_array_t*)malloc(sizeof(ScheduleResult_t));
     ScheduleResult_t *result = NULL;
     bool res = shortest_remaining_time_first(readyqueue, result);
     EXPECT_EQ(false, res);
