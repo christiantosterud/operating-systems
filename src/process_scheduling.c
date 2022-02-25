@@ -60,47 +60,97 @@ bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quan
 // \return a populated dyn_array of ProcessControlBlocks if function ran successful else NULL for an error
 dyn_array_t *load_process_control_blocks(const char *input_file) 
 {
-    
+
+
     FILE *fp;
-    if (input_file){
+    if (input_file)
+    {
+        //open the file in read binary mode
         fp = fopen(input_file, "rb");
+        //check if file opened succesfully
         if (fp == NULL) return NULL;
+        
+        //find the size in bytes of the file
         fseek(fp, 0 , SEEK_END);
         long filelen = ftell(fp);
-        printf("%ld", filelen);
-        filelen = filelen/4;
+
+        //find the number of total uint32s in the file
+        long NumofUint32Actual = filelen/4;
+        
+        //set file pointer back to beginning of file so it can be read
         rewind(fp);
-        uint32_t * buffer;
-        buffer = (uint32_t*)malloc (sizeof(uint32_t)*13);
-        if (fp != NULL) 
+
+        //grab first uint32 to find number of processes
+        uint32_t NumofProcesses;
+        fread(&NumofProcesses, 4, 1, fp);
+        
+
+        //find the number of expected uint32s in the file
+        long NumOfUint32Expected= 1 + 3 * (long)NumofProcesses;
+      
+        //Create array of pcbs to be put in dynamic array
+        ProcessControlBlock_t * processes = (ProcessControlBlock_t*)malloc(sizeof(ProcessControlBlock_t)*NumofProcesses);
+        int i;
+        //check if file is still open and all parameters for each process are included in the file
+        if (fp != NULL && (NumofUint32Actual == NumOfUint32Expected) ) 
         {
-           fread(&buffer, filelen, 1, fp);
+            for (i = 0; i < (int)NumofProcesses; i++)
+            {
+                fread(&processes[i].remaining_burst_time, 4, 1, fp);
+                fread(&processes[i].priority, 4, 1, fp);
+                fread(&processes[i].arrival, 4, 1, fp);
+            }
+
         }
        
-       /* int reader = open(input_file, O_RDONLY);
-        //check it didn't return -1 on failure to open file
-        if (reader != -1)
-        {
-            //fstat informs the file size in bytes and stores the data in the struct stat
-            struct stat reader_stored;
-           long length =  lseek(reader, 0 , SEEK_END);
-           //long filelen = ftell(reader);
+       //Was using to double check uint32 values were being set correctly
+       //printf("%" PRIu32 "\n",processes[0].remaining_burst_time); 
 
-            stat(input_file, &reader_stored);
-
-           // uint32_t * buffer = (uint32_t*)malloc (sizeof(uint32_t)*13);
-           
-            //long filelen2 = sizeof(reader_stored);
-            //long filelen = reader_stored.st_size;
-            //read(reader,buffer,52);
-            printf("%li", length);
-           // printf("%d", buffer[2]);
-         */   
-       }
+       //Create dynamic array from pcb array
+       dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),NULL); 
+       return readyqueue;
+    }
+    else return NULL;
+    
+    
+    
+    // This implementation is just pulling in the data into a uint32 array have it
+    // in here for now in case I need to reference it or use. Implementation above may or
+    // may not be right
+    /*
+    FILE *fp;
+    if (input_file)
+    {
+        //open the file in read binary mode
+        fp = fopen(input_file, "rb");
+        //check if file opened succesfully
+        if (fp == NULL) return NULL;
         
-       
-   //}
-    return NULL;
+        //find the size in bytes of the file
+        fseek(fp, 0 , SEEK_END);
+        long filelen = ftell(fp);
+
+        //find the number of uint32s (4 bytes for every uint32, excluding first uint32)
+        long NumofUint32 = filelen-4/4;
+        
+        //set file pointer back to beginning of file so it can be read
+        rewind(fp);
+
+        //grab first uint32 to find number of processes
+        uint32_t NumofProcesses;
+        fread(&NumofProcesses, 4, 1, fp);
+        printf("%" PRIu32 "\n", NumofProcesses);
+
+        //allocate uint32 array and then read file into the array
+        uint32_t * buffer;
+        buffer = (uint32_t*)malloc (sizeof(uint32_t)*NumofUint32);
+        if (fp != NULL) 
+        {
+           fread(buffer, filelen, 1, fp);
+        }
+       printf("%" PRIu32 "\n",buffer[0]);  
+       }
+        */
 }
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
