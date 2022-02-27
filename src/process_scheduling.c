@@ -46,6 +46,9 @@ bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result)
     return false;   
 }
 
+/**
+ * 
+ */ 
 bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) 
 {
     UNUSED(ready_queue);
@@ -67,7 +70,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
     {
         //open the file in read binary mode
         fp = fopen(input_file, "rb");
-        //check if file opened succesfully
+        //check if file opened successfully
         if (fp == NULL) return NULL;
         
         //find the size in bytes of the file
@@ -87,7 +90,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
 
         //find the number of expected uint32s in the file
         long NumOfUint32Expected= 1 + 3 * (long)NumofProcesses;
-      
+
         //Create array of pcbs to be put in dynamic array
         ProcessControlBlock_t * processes = (ProcessControlBlock_t*)malloc(sizeof(ProcessControlBlock_t)*NumofProcesses);
         int i;
@@ -102,13 +105,13 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
             }
 
         }
-       
-       //Was using to double check uint32 values were being set correctly
-       //printf("%" PRIu32 "\n",processes[0].remaining_burst_time); 
 
-       //Create dynamic array from pcb array
-       dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),NULL); 
-       return readyqueue;
+        //Was using to double check uint32 values were being set correctly
+        //printf("%" PRIu32 "\n",processes[0].remaining_burst_time); 
+
+        //Create dynamic array from pcb array
+        dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),NULL); 
+        return readyqueue;
     }
     else return NULL;
     
