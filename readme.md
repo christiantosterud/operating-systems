@@ -1,16 +1,16 @@
 # Assignment 2
-# Trevor
-# Edited by: Kevin Sutcliffe
 
-Milestone 0: CMake and Unit Testing filled out. 
+## Edited by: Trevor Prodziniski, Jack Seiler, Kevin Sutcliffe, and Chris Tosterud
 
-Milestone 1: PCB file loading and First Come First Served. 
+Milestone 0: CMake and Unit Testing filled out.
 
-Milestone 2: Shortest Job First, Shortest Remaining Time First, Round Robin, and analysis of algorithms. 
+Milestone 1: PCB file loading and First Come First Served.
 
-Note: 
-You can manually copy the time analysis from console and paste it to this readme file, but directly output from your program is strongly recommended.     
----------------------------------------------------------------------------
+Milestone 2: Shortest Job First, Shortest Remaining Time First, Round Robin, and analysis of algorithms.
 
-Add your scheduling algorithm analysis below this line in a readable format. 
----------------------------------------------------------------------------
+Note:
+You can manually copy the time analysis from console and paste it to this readme file, but directly output from your program is strongly recommended.
+
+---
+
+## Add your scheduling algorithm analysis below this line in a readable format.
