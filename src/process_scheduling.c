@@ -111,46 +111,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
        return readyqueue;
     }
     else return NULL;
-    
-    
-    
-    // This implementation is just pulling in the data into a uint32 array have it
-    // in here for now in case I need to reference it or use. Implementation above may or
-    // may not be right
-    /*
-    FILE *fp;
-    if (input_file)
-    {
-        //open the file in read binary mode
-        fp = fopen(input_file, "rb");
-        //check if file opened succesfully
-        if (fp == NULL) return NULL;
-        
-        //find the size in bytes of the file
-        fseek(fp, 0 , SEEK_END);
-        long filelen = ftell(fp);
 
-        //find the number of uint32s (4 bytes for every uint32, excluding first uint32)
-        long NumofUint32 = filelen-4/4;
-        
-        //set file pointer back to beginning of file so it can be read
-        rewind(fp);
-
-        //grab first uint32 to find number of processes
-        uint32_t NumofProcesses;
-        fread(&NumofProcesses, 4, 1, fp);
-        printf("%" PRIu32 "\n", NumofProcesses);
-
-        //allocate uint32 array and then read file into the array
-        uint32_t * buffer;
-        buffer = (uint32_t*)malloc (sizeof(uint32_t)*NumofUint32);
-        if (fp != NULL) 
-        {
-           fread(buffer, filelen, 1, fp);
-        }
-       printf("%" PRIu32 "\n",buffer[0]);  
-       }
-        */
 }
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
