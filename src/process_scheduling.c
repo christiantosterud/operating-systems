@@ -33,6 +33,52 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
         return false;
     }
 
+    time_t begin, end;
+    time(&begin);
+
+    float total_Turn = 0;
+    int number_Jobs = 0;
+// 1. Use of FIFO queue 
+    bool flag = true;
+    do {
+        time_t begin_Turn, end_Turn;
+        // Execute the front of the queue
+        // 2. Pointer to front/first process of the queue
+        void* head = dyn_array_front(ready_queue);
+        ProcessControlBlock_t * controlHead = (ProcessControlBlock_t *) head;
+        if(controlHead->started != true)
+        {
+            controlHead->started = true;
+            time(&begin_Turn);
+
+            // 3. Run the current process
+            
+            // 4. Remove the element
+            flag = dyn_array_pop_front(ready_queue);
+
+            // 5. Keep track of the wait and turn times
+            time(&end_Turn);
+            total_Turn += end_Turn - begin_Turn;
+            number_Jobs++;
+        }
+    } while (flag != false);
+    
+    time(&end);
+    long total_Time = end - begin;
+    result->average_waiting_time = (total_Time - total_Turn)/number_Jobs;  // wait time = time between arrival of the process and the first time the process is scheduled to run on the CPU
+    result->average_turnaround_time = total_Turn/number_Jobs; // turnaround time = time a process takes to complete
+    result->total_run_time = end - begin; //total run time = total time for completion
+
+    return true;
+
+    
+    // for(i = 0; i < (ready_queue->size); i++)
+    // {
+    //     void* head = dyn_array_front(ready_queue);
+    //     ready_queue->size;
+    // }
+    // UNUSED(ready_queue);
+    // UNUSED(result);
     // return false;
 }
 
@@ -64,8 +110,6 @@ bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quan
 // \return a populated dyn_array of ProcessControlBlocks if function ran successful else NULL for an error
 dyn_array_t *load_process_control_blocks(const char *input_file) 
 {
-
-
     FILE *fp;
     if (input_file)
     {
@@ -85,15 +129,15 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         rewind(fp);
 
         //grab first uint32 to find number of processes
-        uint32_t NumofProcesses;
-        fread(&NumofProcesses, 4, 1, fp);
-        
+        uint32_t NumofProcesses = fread(&NumofProcesses, 4, 1, fp);
 
         //find the number of expected uint32s in the file
         long NumOfUint32Expected= 1 + 3 * (long)NumofProcesses;
 
         //Create array of pcbs to be put in dynamic array
         ProcessControlBlock_t * processes = (ProcessControlBlock_t*)malloc(sizeof(ProcessControlBlock_t)*NumofProcesses);
+        //create dynamic array
+        dyn_array_t * dyn_Array_Process = dyn_array_create(NumofUint32Actual, sizeof(uint32_t), NULL);
         int i;
         //check if file is still open and all parameters for each process are included in the file
         if (fp != NULL && (NumofUint32Actual == NumOfUint32Expected) ) 
