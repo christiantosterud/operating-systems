@@ -10,6 +10,7 @@
 #include "dyn_array.h"
 #include "processing_scheduling.h"
 #include "bits/types.h"
+#include <time.h>
 
 
 
@@ -27,9 +28,58 @@ void virtual_cpu(ProcessControlBlock_t *process_control_block)
 
 bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    UNUSED(ready_queue);
-    UNUSED(result);
-    return false;
+    if(ready_queue == NULL || result == NULL)
+    {
+        return false;
+    }
+
+    time_t begin, end;
+    time(&begin);
+
+    float total_Turn = 0;
+    int number_Jobs = 0;
+// 1. Use of FIFO queue 
+    bool flag = true;
+    do {
+        time_t begin_Turn, end_Turn;
+        // Execute the front of the queue
+        // 2. Pointer to front/first process of the queue
+        void* head = dyn_array_front(ready_queue);
+        ProcessControlBlock_t * controlHead = (ProcessControlBlock_t *) head;
+        if(controlHead->started != true)
+        {
+            controlHead->started = true;
+            time(&begin_Turn);
+
+            // 3. Run the current process
+            
+            // 4. Remove the element
+            flag = dyn_array_pop_front(ready_queue);
+
+            // 5. Keep track of the wait and turn times
+            time(&end_Turn);
+            total_Turn += end_Turn - begin_Turn;
+            number_Jobs++;
+        }
+    } while (flag != false);
+    
+    time(&end);
+    long total_Time = end - begin;
+    result->average_waiting_time = (total_Time - total_Turn)/number_Jobs;  // wait time = time between arrival of the process and the first time the process is scheduled to run on the CPU
+    result->average_turnaround_time = total_Turn/number_Jobs; // turnaround time = time a process takes to complete
+    result->total_run_time = end - begin; //total run time = total time for completion
+
+    return true;
+
+    
+    // for(i = 0; i < (ready_queue->size); i++)
+    // {
+    //     void* head = dyn_array_front(ready_queue);
+    //     ready_queue->size;
+    // }
+    // UNUSED(ready_queue);
+    // UNUSED(result);
+    // return false;
 }
 
 bool shortest_job_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
@@ -46,9 +96,6 @@ bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result)
     return false;   
 }
 
-/**
- * 
- */ 
 bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) 
 {
     UNUSED(ready_queue);
@@ -103,7 +150,6 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
                 fread(&processes[i].priority, 4, 1, fp);
                 fread(&processes[i].arrival, 4, 1, fp);
             }
-
         }
 
         //Was using to double check uint32 values were being set correctly
@@ -114,46 +160,6 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         return readyqueue;
     }
     else return NULL;
-    
-    
-    
-    // This implementation is just pulling in the data into a uint32 array have it
-    // in here for now in case I need to reference it or use. Implementation above may or
-    // may not be right
-    /*
-    FILE *fp;
-    if (input_file)
-    {
-        //open the file in read binary mode
-        fp = fopen(input_file, "rb");
-        //check if file opened succesfully
-        if (fp == NULL) return NULL;
-        
-        //find the size in bytes of the file
-        fseek(fp, 0 , SEEK_END);
-        long filelen = ftell(fp);
-
-        //find the number of uint32s (4 bytes for every uint32, excluding first uint32)
-        long NumofUint32 = filelen-4/4;
-        
-        //set file pointer back to beginning of file so it can be read
-        rewind(fp);
-
-        //grab first uint32 to find number of processes
-        uint32_t NumofProcesses;
-        fread(&NumofProcesses, 4, 1, fp);
-        printf("%" PRIu32 "\n", NumofProcesses);
-
-        //allocate uint32 array and then read file into the array
-        uint32_t * buffer;
-        buffer = (uint32_t*)malloc (sizeof(uint32_t)*NumofUint32);
-        if (fp != NULL) 
-        {
-           fread(buffer, filelen, 1, fp);
-        }
-       printf("%" PRIu32 "\n",buffer[0]);  
-       }
-        */
 }
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
