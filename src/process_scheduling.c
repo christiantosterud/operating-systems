@@ -123,13 +123,13 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         long filelen = ftell(fp);
 
         //find the number of total uint32s in the file
-        long NumofUint32Actual = filelen/4;
+        long NumofUint32Actual = filelen/sizeof(uint32_t);
         
         //set file pointer back to beginning of file so it can be read
         rewind(fp);
 
         //grab first uint32 to find number of processes
-        uint32_t NumofProcesses = fread(&NumofProcesses, 4, 1, fp);
+        uint32_t NumofProcesses = fread(&NumofProcesses, sizeof(uint32_t), 1, fp);
 
         //find the number of expected uint32s in the file
         long NumOfUint32Expected= 1 + 3 * (long)NumofProcesses;
@@ -143,10 +143,10 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         {
             for (i = 0; i < (int)NumofProcesses; i++)
             {
-                fread(&processes[i].remaining_burst_time, 4, 1, fp);
+                fread(&processes[i].remaining_burst_time, sizeof(uint32_t), 1, fp);
 
-                fread(&processes[i].priority, 4, 1, fp);
-                fread(&processes[i].arrival, 4, 1, fp);
+                fread(&processes[i].priority, sizeof(uint32_t), 1, fp);
+                fread(&processes[i].arrival, sizeof(uint32_t), 1, fp);
             }
         }
 
@@ -156,7 +156,8 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         // create dynamic array
         dyn_array_t * dyn_Array_Process = dyn_array_create(NumofUint32Actual, sizeof(uint32_t), NULL);
         // Imports data read from PCB into dynamic array
-        dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),dyn_Array_Process); 
+        // dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),dyn_Array_Process);
+        dyn_array_t * readyqueue = dyn_array_import(processes, sizeof(uint32_t),sizeof(ProcessControlBlock_t),dyn_Array_Process); 
         return readyqueue;
     }
     else return NULL;
