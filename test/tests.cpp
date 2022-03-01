@@ -67,7 +67,7 @@ TEST (first_come_first_serve, NullResult)
     EXPECT_EQ(false, res);
 }
 
-TEST(first_come_first_serve, goodInput){
+TEST(first_come_first_serve, GoodInput){
         ScheduleResult_t *sr = new ScheduleResult_t;
         dyn_array_t* da = dyn_array_create(0,sizeof(ProcessControlBlock_t),NULL);
         memset(sr,0,sizeof(ScheduleResult_t));
@@ -168,7 +168,7 @@ TEST (round_robin, NullResult)
     EXPECT_EQ(false, res);
 }
 
-TEST(round_robin , zeroQuantum){
+TEST(round_robin , ZeroQuantum){
     dyn_array_t* da = dyn_array_create(0,sizeof(ProcessControlBlock_t),NULL);
     ScheduleResult_t* sr = new ScheduleResult_t;
     size_t q = 0;

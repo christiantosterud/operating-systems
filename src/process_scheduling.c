@@ -136,8 +136,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
 
         //Create array of pcbs to be put in dynamic array
         ProcessControlBlock_t * processes = (ProcessControlBlock_t*)malloc(sizeof(ProcessControlBlock_t)*NumofProcesses);
-        //create dynamic array
-        dyn_array_t * dyn_Array_Process = dyn_array_create(NumofUint32Actual, sizeof(uint32_t), NULL);
+        
         int i;
         //check if file is still open and all parameters for each process are included in the file
         if (fp != NULL && (NumofUint32Actual == NumOfUint32Expected) ) 
@@ -145,6 +144,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
             for (i = 0; i < (int)NumofProcesses; i++)
             {
                 fread(&processes[i].remaining_burst_time, 4, 1, fp);
+
                 fread(&processes[i].priority, 4, 1, fp);
                 fread(&processes[i].arrival, 4, 1, fp);
             }
@@ -153,8 +153,10 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         //Was using to double check uint32 values were being set correctly
         //printf("%" PRIu32 "\n",processes[0].remaining_burst_time); 
 
-        //Create dynamic array from pcb array
-        dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),NULL); 
+        // create dynamic array
+        dyn_array_t * dyn_Array_Process = dyn_array_create(NumofUint32Actual, sizeof(uint32_t), NULL);
+        // Imports data read from PCB into dynamic array
+        dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),dyn_Array_Process); 
         return readyqueue;
     }
     else return NULL;
