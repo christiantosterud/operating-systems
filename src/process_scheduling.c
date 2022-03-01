@@ -157,7 +157,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         dyn_array_t * dyn_Array_Process = dyn_array_create(NumofUint32Actual, sizeof(uint32_t), NULL);
         // Imports data read from PCB into dynamic array
         // dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),dyn_Array_Process);
-        dyn_array_t * readyqueue = dyn_array_import(processes, sizeof(uint32_t),sizeof(ProcessControlBlock_t),dyn_Array_Process); 
+        dyn_array_t * readyqueue = dyn_array_import(processes, sizeof(uint32_t),sizeof(ProcessControlBlock_t), dyn_Array_Process); 
         return readyqueue;
     }
     else return NULL;
