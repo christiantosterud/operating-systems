@@ -46,6 +46,38 @@ TEST (load_process_control_blocks, NonExistingInputFilename)
     ASSERT_EQ(test, res);
 }
 
+// TEST (load_process_control_blocks, GoodFileInput)
+// {
+//      const char *input_filename = "pcb.bin";
+
+//     //test file
+//     uint32_t burst_time_values[NUM_PCB];
+//     uint32_t i;
+//     for ( i = 0; i < NUM_PCB; ++i )
+//     {
+//         // sets burst_time_values[i] to a random number in the range from 1 - 15
+//         burst_time_values[i] = rand() % 15 + 1;
+//     }
+//     int fd = open( input_filename, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH );
+//     write( fd, ( const void* ) NUM_PCB, sizeof( uint32_t ) );
+//     write( fd, &burst_time_values, NUM_PCB * sizeof( uint32_t ) );
+//     close( fd );
+
+//     //call to load_process_control_blocks to compare the file written above
+//     dyn_array_t *res = load_process_control_blocks( input_filename );
+//     ASSERT_NE( res, ( dyn_array_t* ) NULL );
+//     size_t j;
+//     for ( j = 0; j < dyn_array_size( res ); j++)
+//     {
+//         uint32_t* grab_first_triple_at_j = ( uint32_t* ) dyn_array_at( res, j );
+//         EXPECT_EQ( *grab_first_triple_at_j, burst_time_values[ j ] );
+//     }
+
+//     //destroy/free dynamic array from test
+//     dyn_array_destroy( res );
+//     score += 10;
+// }
+
 
 /*
 * FIRST COME FIRST SERVE TESTS

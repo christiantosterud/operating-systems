@@ -33,6 +33,9 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
         return false;
     }
 
+// sort by arrival time first
+
+//First attempt, need to fix the algorithm and clean up the code
     time_t begin, end;
     time(&begin);
 
@@ -98,6 +101,9 @@ bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result)
 
 bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) 
 {
+    //Need to use the bool started in this algorithm
+    //Chnadra wouldn't use started he would use a something else from the struct
+    //We can create our own variables in the struct
     UNUSED(ready_queue);
     UNUSED(result);
     UNUSED(quantum);
@@ -144,9 +150,9 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
             for (i = 0; i < (int)NumofProcesses; i++)
             {
                 fread(&processes[i].remaining_burst_time, sizeof(uint32_t), 1, fp);
-
                 fread(&processes[i].priority, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].arrival, sizeof(uint32_t), 1, fp);
+                processes[i].arrival = false;
             }
         }
 
@@ -154,11 +160,11 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
         //printf("%" PRIu32 "\n",processes[0].remaining_burst_time); 
 
         // create dynamic array
-        dyn_array_t * dyn_Array_Process = dyn_array_create(NumofUint32Actual, sizeof(uint32_t), NULL);
+        //dyn_array_t * readyQueue = dyn_array_create(NumofUint32Actual, (int)NumofProcesses, NULL);
         // Imports data read from PCB into dynamic array
-        // dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),dyn_Array_Process);
-        dyn_array_t * readyqueue = dyn_array_import(processes, sizeof(uint32_t),sizeof(ProcessControlBlock_t), dyn_Array_Process); 
-        return readyqueue;
+        dyn_array_t * readyQueue = dyn_array_import(processes, (int)NumofProcesses, sizeof(ProcessControlBlock_t), NULL);
+        //dyn_array_t * readyqueue = dyn_array_import(processes, sizeof(uint32_t), sizeof(ProcessControlBlock_t), dyn_Array_Process); 
+        return readyQueue;
     }
     else return NULL;
 }
