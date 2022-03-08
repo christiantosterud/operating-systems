@@ -19,6 +19,45 @@
 // remove it before you submit. Just allows things to compile initially.
 #define UNUSED(x) (void)(x)
 
+
+
+
+//Sorts the given elements of a pointer in order from lowest to highest number of arrival time
+int arrival_sort(const void * a, const void * b)
+{
+    ProcessControlBlock_t *blockA = (ProcessControlBlock_t *)a;
+    ProcessControlBlock_t *blockB = (ProcessControlBlock_t *)b;
+    return( blockA->arrival - blockB->arrival);
+}
+
+//Sorts the given elements of a pointer in order from lowest to highest number of time remaining
+int time_remaining_sort(const void *a, const void *b)
+{
+    ProcessControlBlock_t *blockA = (ProcessControlBlock_t *)a;
+    ProcessControlBlock_t *blockB = (ProcessControlBlock_t *)b;
+    return( blockA->remaining_burst_time - blockB->remaining_burst_time);
+}
+
+//Sorts the given elements of a pointer in order from lowest to highest number of priority
+int priority_sort(const void *a, const void *b)
+{
+    ProcessControlBlock_t *blockA = (ProcessControlBlock_t *)a;
+    ProcessControlBlock_t *blockB = (ProcessControlBlock_t *)b;
+    return( blockA->priority - blockB->priority);
+}
+
+//Is used after arrival time sort to determine which pcbs have arrived and are ready to be put on to the cpu
+int arrived_pcbs(ProcessControlBlock_t *base, uint32_t t, uint32_t count)
+{
+    if((uint32_t)base->arrival > t) return count;
+    else {
+        count++;
+        base++;
+        return arrived_pcbs(base, t, count);
+    } 
+}
+
+
 // private function
 void virtual_cpu(ProcessControlBlock_t *process_control_block) 
 {
@@ -110,6 +149,24 @@ bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result)
 
 bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) 
 {
+    /*if(ready_queue == NULL || result == NULL)
+    {
+        return false;
+    }
+
+    float total_Burst, total_Wait, deadTime = 0;
+    int number_Jobs = 0;
+    size_t queue_Size = dyn_array_capacity(ready_queue);
+    // 1. Use of FIFO queue 
+    bool flag = true;
+    do {
+        break;
+
+    } while(flag == true && number_Jobs < (int) queue_Size)
+*/
+
+
+
     //Need to use the bool started in this algorithm
     //Chnadra wouldn't use started he would use a something else from the struct
     //We can create our own variables in the struct
@@ -180,7 +237,65 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    UNUSED(ready_queue);
+    if(ready_queue == NULL || result == NULL)
+    {
+        return false;
+    }
+    int number_Jobs = 0;
+    int queue_Size = dyn_array_capacity(ready_queue);
+    //Right now I am using an int that is getting incremented for the time not
+    //sure if we are supposed to be using an actual timer but the concepts should
+    //be the same
+    int t = 0;
+    bool flag = true;
+    qsort(ready_queue, queue_Size, sizeof(ProcessControlBlock_t), arrival_sort);
+    do {
+        //Grab the front element in the queue
+        ProcessControlBlock_t *head = dyn_array_front(ready_queue);
+
+
+        //Count variable is used to indicate how many elements have arrived in the queue
+        //based on the current time
+        int count = 0;
+
+
+        //arrived_pcbs is a recursive call to get the number of elements that have arrived
+        count = arrived_pcbs(head, t, count);
+
+
+        //qsort will sort the "count" of elements that have arrived
+        //and align them based on remaining burst time
+        qsort(head, count, sizeof(ProcessControlBlock_t), time_remaining_sort);
+
+
+        //Set cur to the element that is ready to get on the cpu and 
+        //has the shortest wait time
+        ProcessControlBlock_t *cur = (ProcessControlBlock_t *)head;
+
+
+        if(!cur->started) cur->timeStarted = t;
+        //Need to setup a variable to track each ones exact start time due to
+        // the fact that they will be getting moved on and off of the cpu
+        if(cur->remaining_burst_time > 0) virtual_cpu(cur);
+        //Need to ask some questions about the rest of this
+        else {
+            flag = dyn_array_pop_front(ready_queue);
+            number_Jobs++;
+            t++;
+        }
+
+        
+
+    } while(flag == true && number_Jobs < (int) queue_Size);
+
+
+
+
+   // UNUSED(ready_queue);
     UNUSED(result);
     return false;
 }
+
+
+
+

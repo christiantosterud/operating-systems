@@ -83,6 +83,10 @@ TEST (load_process_control_blocks, NonExistingInputFilename)
 * FIRST COME FIRST SERVE TESTS
 **/
 
+
+
+
+
 TEST (first_come_first_serve, NullQueue) 
 {
     dyn_array_t *readyqueue = NULL;
@@ -99,25 +103,7 @@ TEST (first_come_first_serve, NullResult)
     EXPECT_EQ(false, res);
 }
 
-// TEST(first_come_first_serve, GoodInput){
-//         ScheduleResult_t *sr = new ScheduleResult_t;
-//         dyn_array_t* da = dyn_array_create(0,sizeof(ProcessControlBlock_t),NULL);
-//         memset(sr,0,sizeof(ScheduleResult_t));
-//         ProcessControlBlock_t times[] = {{4,0,false},{7,0,false},{3,0,false}
-//         };	
-//         dyn_array_push_back(da,&times[2]);
-//         dyn_array_push_back(da,&times[1]);
-//         dyn_array_push_back(da,&times[0]);
-//         bool res = first_come_first_serve (da,sr);
-//         ASSERT_EQ(true,res);  // stop if not
 
-//         float answers[3] = {5,9.67,14};
-//         EXPECT_EQ(answers[0],sr->average_latency_time);
-//         EXPECT_EQ(answers[1],sr->average_wall_clock_time);
-//         EXPECT_EQ(answers[2],sr->total_run_time);
-//         dyn_array_destroy(da);
-//         delete sr;
-// }
 
 
 /* 
