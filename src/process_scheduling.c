@@ -57,13 +57,13 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
                 controlHead->started = true;
                 
                 //calculate the wait time
-                total_Wait = total_Burst - controlHead->arrival;
+                total_Wait += total_Burst - controlHead->arrival;
 
                 // if nothing was in the queue yet after the a process was completed. 
                 // The CPU would be doing nothing but waiting, therefore adding time to the total time to process all the PCBs
                 if(controlHead->arrival > total_Burst)
                 {
-                    deadTime = controlHead->arrival - total_Burst;
+                    deadTime += controlHead->arrival - total_Burst;
                 }
 
                 // Run the current process and get the burst time aka "run time"
@@ -94,13 +94,13 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
     //         controlHead->started = true;
             
     //         //calculate the wait time
-    //         total_Wait = total_Burst - controlHead->arrival;
+    //         total_Wait += total_Burst - controlHead->arrival;
 
     //         // if nothing was in the queue yet after the a process was completed. 
     //         // The CPU would be doing nothing but waiting, therefore adding time to the total time to process all the PCBs
     //         if(controlHead->arrival > total_Burst)
     //         {
-    //             deadTime = controlHead->arrival - total_Burst;
+    //             deadTime += controlHead->arrival - total_Burst;
     //         }
 
     //         // Run the current process and get the burst time aka "run time"
