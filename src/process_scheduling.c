@@ -131,7 +131,20 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
 
 bool shortest_job_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    UNUSED(ready_queue);
+    if(ready_queue == NULL || result == NULL)
+    {
+        return false;
+    }
+    int number_Jobs = 0;
+    int queue_Size = dyn_array_capacity(ready_queue);
+    bool flag = true;
+    qsort(ready_queue, queue_Size, sizeof(ProcessControlBlock_t), time_remaining_sort);
+    do {
+        
+
+    } while(flag == true && number_Jobs < (int) queue_Size);
+
+    // UNUSED(ready_queue);
     UNUSED(result);
     return false;   
 }
