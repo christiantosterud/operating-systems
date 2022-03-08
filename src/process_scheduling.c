@@ -26,6 +26,14 @@ void virtual_cpu(ProcessControlBlock_t *process_control_block)
     --process_control_block->remaining_burst_time;
 }
 
+/**
+ * @brief Runs the First Come First Served Process Scheduling algorithm over the incoming ready_queue
+ * 
+ * @param ready_queue a dyn_array of type ProcessControlBlock_t that contain be up to N elements
+ * @param result used for first come first served stat tracking \ref ScheduleResult_t
+ * @return true if function ran successful
+ * @return false for an error
+ */
 bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
     if(ready_queue == NULL || result == NULL)
@@ -33,47 +41,44 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
         return false;
     }
 
-// sort by arrival time first
-
-//First attempt, need to fix the algorithm and clean up the code
-    time_t begin, end;
-    time(&begin);
-
-    float total_Turn = 0;
+    float total_Burst, total_Wait, deadTime = 0;
     int number_Jobs = 0;
-// 1. Use of FIFO queue 
+    size_t queue_Size = dyn_array_capacity(ready_queue);
+    // 1. Use of FIFO queue 
     bool flag = true;
     do {
-        time_t begin_Turn, end_Turn;
         // Execute the front of the queue
-        // 2. Pointer to front/first process of the queue
+        // Grabs the front/first process of the queue
         void* head = dyn_array_front(ready_queue);
         ProcessControlBlock_t * controlHead = (ProcessControlBlock_t *) head;
-        if(controlHead->started != true)
+        if(controlHead->started == false)
         {
             controlHead->started = true;
-            time(&begin_Turn);
-
-            // 3. Run the current process
             
-            // 4. Remove the element
-            flag = dyn_array_pop_front(ready_queue);
+            //calculate the wait time
+            total_Wait = total_Burst - controlHead->arrival;
 
-            // 5. Keep track of the wait and turn times
-            time(&end_Turn);
-            total_Turn += end_Turn - begin_Turn;
+            // if nothing was in the queue yet after the a process was completed. 
+            // The CPU would be doing nothing but waiting, therefore adding time to the total time to process all the PCBs
+            if(controlHead->arrival > total_Burst)
+            {
+                deadTime = controlHead->arrival - total_Burst;
+            }
+
+            // Run the current process and get the burst time aka "run time"
+            total_Burst += controlHead->remaining_burst_time;
+
+            // Remove the process
+            flag = dyn_array_pop_front(ready_queue);
             number_Jobs++;
         }
-    } while (flag != false);
+    } while (flag == true && number_Jobs < (int) queue_Size); // Another job in the queue
     
-    time(&end);
-    long total_Time = end - begin;
-    result->average_waiting_time = (total_Time - total_Turn)/number_Jobs;  // wait time = time between arrival of the process and the first time the process is scheduled to run on the CPU
-    result->average_turnaround_time = total_Turn/number_Jobs; // turnaround time = time a process takes to complete
-    result->total_run_time = end - begin; //total run time = total time for completion
+    result->average_waiting_time = total_Wait/number_Jobs;  // wait time = time between arrival of the process and the first time the process is scheduled to run on the CPU
+    result->average_turnaround_time = total_Burst/number_Jobs; // turnaround time = time a process takes to complete
+    result->total_run_time = total_Burst + deadTime; //total run time = total time for completion
 
     return true;
-
     
     // for(i = 0; i < (ready_queue->size); i++)
     // {
@@ -92,6 +97,10 @@ bool shortest_job_first(dyn_array_t *ready_queue, ScheduleResult_t *result)
     return false;   
 }
 
+/**
+ * @brief DO NOT NEED TO DO.
+ * ANDERSEN SAID WE DO NOT NEED TO
+ */
 bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
     UNUSED(ready_queue);
