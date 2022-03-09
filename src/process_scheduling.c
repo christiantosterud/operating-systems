@@ -36,6 +36,7 @@ void virtual_cpu(ProcessControlBlock_t *process_control_block)
  */
 bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
+    // Trying to fix master
     if(ready_queue == NULL || result == NULL)
     {
         return false;
