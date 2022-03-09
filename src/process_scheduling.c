@@ -130,28 +130,30 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
     {
         //open the file in read binary mode
         fp = fopen(input_file, "rb");
-        //check if file opened successfully
-        if (fp == NULL) return NULL;
         
+        //check if file opened succesfully
+        if (fp == NULL) return NULL;
+
         //find the size in bytes of the file
         fseek(fp, 0 , SEEK_END);
         long filelen = ftell(fp);
 
         //find the number of total uint32s in the file
-        long NumofUint32Actual = filelen/sizeof(uint32_t);
-        
+        long NumofUint32Actual = filelen/4;
+
         //set file pointer back to beginning of file so it can be read
         rewind(fp);
 
         //grab first uint32 to find number of processes
-        uint32_t NumofProcesses = fread(&NumofProcesses, sizeof(uint32_t), 1, fp);
+        uint32_t NumofProcesses;
+        fread(&NumofProcesses, sizeof(uint32_t), 1, fp);
 
         //find the number of expected uint32s in the file
         long NumOfUint32Expected= 1 + 3 * (long)NumofProcesses;
 
         //Create array of pcbs to be put in dynamic array
         ProcessControlBlock_t * processes = (ProcessControlBlock_t*)malloc(sizeof(ProcessControlBlock_t)*NumofProcesses);
-        
+
         int i;
         //check if file is still open and all parameters for each process are included in the file
         if (fp != NULL && (NumofUint32Actual == NumOfUint32Expected) ) 
@@ -161,19 +163,14 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
                 fread(&processes[i].remaining_burst_time, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].priority, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].arrival, sizeof(uint32_t), 1, fp);
-                processes[i].arrival = false;
+                processes[i].started = false;
             }
         }
+        else return NULL;
 
-        //Was using to double check uint32 values were being set correctly
-        //printf("%" PRIu32 "\n",processes[0].remaining_burst_time); 
-
-        // create dynamic array
-        //dyn_array_t * readyQueue = dyn_array_create(NumofUint32Actual, (int)NumofProcesses, NULL);
-        // Imports data read from PCB into dynamic array
-        dyn_array_t * readyQueue = dyn_array_import(processes, (int)NumofProcesses, sizeof(ProcessControlBlock_t), NULL);
-        //dyn_array_t * readyqueue = dyn_array_import(processes, sizeof(uint32_t), sizeof(ProcessControlBlock_t), dyn_Array_Process); 
-        return readyQueue;
+       //Create dynamic array from pcb array
+       dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),NULL); 
+       return readyqueue;
     }
     else return NULL;
 }
