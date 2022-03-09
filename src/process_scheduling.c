@@ -140,6 +140,8 @@ bool shortest_job_first(dyn_array_t *ready_queue, ScheduleResult_t *result)
     bool flag = true;
     qsort(ready_queue, queue_Size, sizeof(ProcessControlBlock_t), time_remaining_sort);
     do {
+       // ProcessControlBlock_t *head = dyn_array_pop_front(ready_queue);
+        //turnaround time = completed time - arrival
         
 
     } while(flag == true && number_Jobs < (int) queue_Size);
@@ -200,28 +202,30 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
     {
         //open the file in read binary mode
         fp = fopen(input_file, "rb");
-        //check if file opened successfully
-        if (fp == NULL) return NULL;
         
+        //check if file opened succesfully
+        if (fp == NULL) return NULL;
+
         //find the size in bytes of the file
         fseek(fp, 0 , SEEK_END);
         long filelen = ftell(fp);
 
         //find the number of total uint32s in the file
-        long NumofUint32Actual = filelen/sizeof(uint32_t);
-        
+        long NumofUint32Actual = filelen/4;
+
         //set file pointer back to beginning of file so it can be read
         rewind(fp);
 
         //grab first uint32 to find number of processes
-        uint32_t NumofProcesses = fread(&NumofProcesses, sizeof(uint32_t), 1, fp);
+        uint32_t NumofProcesses;
+        fread(&NumofProcesses, sizeof(uint32_t), 1, fp);
 
         //find the number of expected uint32s in the file
         long NumOfUint32Expected= 1 + 3 * (long)NumofProcesses;
 
         //Create array of pcbs to be put in dynamic array
         ProcessControlBlock_t * processes = (ProcessControlBlock_t*)malloc(sizeof(ProcessControlBlock_t)*NumofProcesses);
-        
+
         int i;
         //check if file is still open and all parameters for each process are included in the file
         if (fp != NULL && (NumofUint32Actual == NumOfUint32Expected) ) 
@@ -231,19 +235,14 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
                 fread(&processes[i].remaining_burst_time, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].priority, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].arrival, sizeof(uint32_t), 1, fp);
-                processes[i].arrival = false;
+                processes[i].started = false;
             }
         }
+        else return NULL;
 
-        //Was using to double check uint32 values were being set correctly
-        //printf("%" PRIu32 "\n",processes[0].remaining_burst_time); 
-
-        // create dynamic array
-        //dyn_array_t * readyQueue = dyn_array_create(NumofUint32Actual, (int)NumofProcesses, NULL);
-        // Imports data read from PCB into dynamic array
-        dyn_array_t * readyQueue = dyn_array_import(processes, (int)NumofProcesses, sizeof(ProcessControlBlock_t), NULL);
-        //dyn_array_t * readyqueue = dyn_array_import(processes, sizeof(uint32_t), sizeof(ProcessControlBlock_t), dyn_Array_Process); 
-        return readyQueue;
+       //Create dynamic array from pcb array
+       dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),NULL); 
+       return readyqueue;
     }
     else return NULL;
 }
@@ -254,59 +253,59 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
     {
         return false;
     }
-    int number_Jobs = 0;
-    int queue_Size = dyn_array_capacity(ready_queue);
-    //Right now I am using an int that is getting incremented for the time not
-    //sure if we are supposed to be using an actual timer but the concepts should
-    //be the same
-    int t = 0;
     bool flag = true;
-    qsort(ready_queue, queue_Size, sizeof(ProcessControlBlock_t), arrival_sort);
+    uint32_t t = 0;
+    int numJobs = 0;
+    int queue_Size = dyn_array_capacity(ready_queue);
+    if(queue_Size > (int)sizeof(ProcessControlBlock_t)) qsort(ready_queue, queue_Size, sizeof(ProcessControlBlock_t), arrival_sort);
     do {
-        //Grab the front element in the queue
         ProcessControlBlock_t *head = dyn_array_front(ready_queue);
-
-
-        //Count variable is used to indicate how many elements have arrived in the queue
-        //based on the current time
-        int count = 0;
-
-
-        //arrived_pcbs is a recursive call to get the number of elements that have arrived
-        count = arrived_pcbs(head, t, count);
-
-
-        //qsort will sort the "count" of elements that have arrived
-        //and align them based on remaining burst time
-        qsort(head, count, sizeof(ProcessControlBlock_t), time_remaining_sort);
-
-
-        //Set cur to the element that is ready to get on the cpu and 
-        //has the shortest wait time
-        ProcessControlBlock_t *cur = (ProcessControlBlock_t *)head;
-
-
-        if(!cur->started) cur->timeStarted = t;
-        //Need to setup a variable to track each ones exact start time due to
-        // the fact that they will be getting moved on and off of the cpu
-        if(cur->remaining_burst_time > 0) virtual_cpu(cur);
-        //Need to ask some questions about the rest of this
-        else {
+        if(head != NULL)
+        {
+            int count = 0;
+            count = arrived_pcbs(head, t, count);
+            while(count <= 0) {
+                t++;
+                count = arrived_pcbs(head, t, count);
+                
+            }
+            if(count > 0) qsort(head, count, sizeof(ProcessControlBlock_t), time_remaining_sort);
+            
+            if(!head->started) {
+                numJobs++;
+                head->started = true;
+                result->average_waiting_time += (t - head->arrival);
+                virtual_cpu(head);
+                t++;
+                if(head->remaining_burst_time == 0) {
+                    result->average_turnaround_time += (t - head->arrival);
+                    flag = dyn_array_pop_front(ready_queue);
+                }
+            }
+            else if(head->started && head->remaining_burst_time > 0) {
+                virtual_cpu(head);
+                t++;
+                if(head->remaining_burst_time == 0) {
+                    result->average_turnaround_time += (t - head->arrival);
+                    flag = dyn_array_pop_front(ready_queue);
+                }
+            } else {
+                numJobs++;
+                result->average_turnaround_time += (t - head->arrival);
+                flag = dyn_array_pop_front(ready_queue);
+            }
+        }
+        else if(head == NULL) {
             flag = dyn_array_pop_front(ready_queue);
-            number_Jobs++;
-            t++;
         }
 
-        
+    } while(flag == true);
 
-    } while(flag == true && number_Jobs < (int) queue_Size);
+    result->average_turnaround_time = (result->average_turnaround_time / numJobs);
+    result->average_waiting_time = (result->average_waiting_time / numJobs);
+    result->total_run_time = t;
 
-
-
-
-   // UNUSED(ready_queue);
-    UNUSED(result);
-    return false;
+    return true;
 }
 
 

@@ -16,7 +16,6 @@ extern "C"
         uint32_t remaining_burst_time;  // the remaining burst of the pcb
         uint32_t priority;				// The priority of the task
         uint32_t arrival;				// Time the process arrived in the ready queue
-        uint32_t timeStarted;
         bool started;              	    // If it has been activated on virtual CPU
     } 
     ProcessControlBlock_t;		        // you may or may not need to add more elements
