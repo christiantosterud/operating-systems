@@ -176,23 +176,21 @@ TEST (shortest_remaining_time_first, goodInput)
     dyn_array_t* pcbs = dyn_array_create(0,sizeof(ProcessControlBlock_t),NULL);
     memset(sr,0,sizeof(ScheduleResult_t));
     // add PCBs now
-    ProcessControlBlock_t data[5] = 
+    ProcessControlBlock_t data[4] = 
     {
-        [0] = {1,2,5,0},
-        [1] = {2,3,4,0},
-        [2] = {3,1,3,0},
-        [3] = {4,4,2,0},
-        [4] = {5,7,1,0},
+        [0] = {25,2,4,0},
+        [1] = {5,3,3,0},
+        [2] = {5,1,2,0},
+        [3] = {6,4,1,0},
     };
     // back loading dyn_array, pull from the back
-    dyn_array_push_back(pcbs,&data[4]);
     dyn_array_push_back(pcbs,&data[3]);
     dyn_array_push_back(pcbs,&data[2]);
     dyn_array_push_back(pcbs,&data[1]);
     dyn_array_push_back(pcbs,&data[0]);	
     bool res = shortest_remaining_time_first (pcbs,sr);	
     ASSERT_EQ(true,res);
-    float answers[3] = {7,4,15};
+    float answers[3] = {17,6.75,41};
     ASSERT_EQ(answers[0],sr->average_turnaround_time);
     ASSERT_EQ(answers[1],sr->average_waiting_time);
     ASSERT_EQ(answers[2],sr->total_run_time);
@@ -200,6 +198,11 @@ TEST (shortest_remaining_time_first, goodInput)
     delete sr;
 
 }
+
+
+
+
+
 
 
 
