@@ -177,6 +177,9 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
+    UNUSED(ready_queue);
+    UNUSED(result);
+    /*
     if(ready_queue == NULL || result == NULL)
     {
         return false;
@@ -234,6 +237,6 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
     result->average_turnaround_time = (result->average_turnaround_time / numJobs);
     result->average_waiting_time = (result->average_waiting_time / numJobs);
     result->total_run_time = t;
-
+*/
     return true;
 }
