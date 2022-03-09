@@ -149,31 +149,82 @@ bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result)
 
 bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) 
 {
-    /*if(ready_queue == NULL || result == NULL)
+    //qsort(ready_queue, (int)dyn_array_size(ready_queue), sizeof(ProcessControlBlock_t), arrival_sort);
+    //size_t j;
+    size_t limit = dyn_array_size(ready_queue);
+    /*for ( j = 0; j < dyn_array_size(ready_queue); j++ )
     {
-        return false;
+        void* head = dyn_array_at( ready_queue, j);
+        ProcessControlBlock_t * controlHead = ( ProcessControlBlock_t * ) head;
+        controlHead->og_burst= controlHead->remaining_burst_time;
+    }*/
+    int total = 0, counter = 0;
+    
+    //int keep_track = 0;
+
+    int wait_time = 0, turnaround_time = 0;
+
+    //float average_wait_time, average_turnaround_time;
+    void* head = dyn_array_front(ready_queue);
+
+    //size_t x = dyn_array_size(ready_queue);
+    //x;
+   // dyn_array_extract_front(ready_queue, head);
+  // printf("%d \n",curFront->arrival);
+    ProcessControlBlock_t * curFront = ( ProcessControlBlock_t * ) head;
+    while (dyn_array_size(ready_queue)>0)
+    {
+        //printf("%d \n",curFront->arrival);
+        //printf("%ld ", dyn_array_size(ready_queue));
+        if (curFront->remaining_burst_time <= quantum && curFront->remaining_burst_time > 0)
+        {
+             //printf("%d",curFront->remaining_burst_time);
+            total = total + curFront->remaining_burst_time;
+            curFront->remaining_burst_time = 0;
+            counter = 1;
+        }
+        else if (curFront->remaining_burst_time > 0)
+        {
+            curFront->remaining_burst_time = curFront->remaining_burst_time - quantum;
+            //printf
+            total = total + quantum;
+            dyn_array_push_back(ready_queue, curFront);
+            dyn_array_extract_front(ready_queue, head);
+            curFront = ( ProcessControlBlock_t * ) head;
+        }
+
+        if (curFront->remaining_burst_time == 0 && counter == 1)
+        {
+            //x--;
+            
+           
+            
+            if (limit % 2 == 1)
+            {
+                
+                wait_time = wait_time + total - curFront->arrival - curFront->og_burst+1;
+
+                turnaround_time = turnaround_time + total - curFront->arrival+1;
+            //printf("%d \n",total);
+            //printf("%d \n",turnaround_time );
+            }
+            else {
+                wait_time = wait_time + total - curFront->arrival - curFront->og_burst;
+
+                turnaround_time = turnaround_time + total - curFront->arrival;
+            }
+            counter = 0;
+            dyn_array_extract_front(ready_queue, head);
+            curFront = ( ProcessControlBlock_t * ) head;
+        }
+
+   
+
     }
-
-    float total_Burst, total_Wait, deadTime = 0;
-    int number_Jobs = 0;
-    size_t queue_Size = dyn_array_capacity(ready_queue);
-    // 1. Use of FIFO queue 
-    bool flag = true;
-    do {
-        break;
-
-    } while(flag == true && number_Jobs < (int) queue_Size)
-*/
-
-
-
-    //Need to use the bool started in this algorithm
-    //Chnadra wouldn't use started he would use a something else from the struct
-    //We can create our own variables in the struct
-    UNUSED(ready_queue);
-    UNUSED(result);
-    UNUSED(quantum);
-    return false;
+    result->average_waiting_time = wait_time * 1.0 / limit;
+    result->average_turnaround_time = turnaround_time * 1.0 / limit;
+    result->total_run_time = total;
+    return true;
 }
 
 // Reads the PCB burst time values from the binary file into ProcessControlBlock_t remaining_burst_time field
@@ -182,33 +233,35 @@ bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quan
 // \return a populated dyn_array of ProcessControlBlocks if function ran successful else NULL for an error
 dyn_array_t *load_process_control_blocks(const char *input_file) 
 {
-    FILE *fp;
+   FILE *fp;
     if (input_file)
     {
         //open the file in read binary mode
         fp = fopen(input_file, "rb");
-        //check if file opened successfully
-        if (fp == NULL) return NULL;
         
+        //check if file opened succesfully
+        if (fp == NULL) return NULL;
+
         //find the size in bytes of the file
         fseek(fp, 0 , SEEK_END);
         long filelen = ftell(fp);
 
         //find the number of total uint32s in the file
-        long NumofUint32Actual = filelen/sizeof(uint32_t);
-        
+        long NumofUint32Actual = filelen/4;
+
         //set file pointer back to beginning of file so it can be read
         rewind(fp);
 
         //grab first uint32 to find number of processes
-        uint32_t NumofProcesses = fread(&NumofProcesses, sizeof(uint32_t), 1, fp);
+        uint32_t NumofProcesses;
+        fread(&NumofProcesses, sizeof(uint32_t), 1, fp);
 
         //find the number of expected uint32s in the file
         long NumOfUint32Expected= 1 + 3 * (long)NumofProcesses;
 
         //Create array of pcbs to be put in dynamic array
         ProcessControlBlock_t * processes = (ProcessControlBlock_t*)malloc(sizeof(ProcessControlBlock_t)*NumofProcesses);
-        
+
         int i;
         //check if file is still open and all parameters for each process are included in the file
         if (fp != NULL && (NumofUint32Actual == NumOfUint32Expected) ) 
@@ -218,19 +271,14 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
                 fread(&processes[i].remaining_burst_time, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].priority, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].arrival, sizeof(uint32_t), 1, fp);
-                processes[i].arrival = false;
+                processes[i].started = false;
             }
         }
+        else return NULL;
 
-        //Was using to double check uint32 values were being set correctly
-        //printf("%" PRIu32 "\n",processes[0].remaining_burst_time); 
-
-        // create dynamic array
-        //dyn_array_t * readyQueue = dyn_array_create(NumofUint32Actual, (int)NumofProcesses, NULL);
-        // Imports data read from PCB into dynamic array
-        dyn_array_t * readyQueue = dyn_array_import(processes, (int)NumofProcesses, sizeof(ProcessControlBlock_t), NULL);
-        //dyn_array_t * readyqueue = dyn_array_import(processes, sizeof(uint32_t), sizeof(ProcessControlBlock_t), dyn_Array_Process); 
-        return readyQueue;
+       //Create dynamic array from pcb array
+       dyn_array_t * readyqueue = dyn_array_import(processes, (int)NumofProcesses,sizeof(ProcessControlBlock_t),NULL); 
+       return readyqueue;
     }
     else return NULL;
 }
@@ -273,7 +321,7 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
         ProcessControlBlock_t *cur = (ProcessControlBlock_t *)head;
 
 
-        if(!cur->started) cur->timeStarted = t;
+        //if(!cur->started) cur->timeStarted = t;
         //Need to setup a variable to track each ones exact start time due to
         // the fact that they will be getting moved on and off of the cpu
         if(cur->remaining_burst_time > 0) virtual_cpu(cur);
