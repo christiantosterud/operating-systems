@@ -41,9 +41,10 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
         return false;
     }
 
-    float total_Burst, total_Wait, deadTime = 0;
-    //bool flag;
-    
+    float total_Run = 0;
+    float total_Turn = 0;
+    float total_Wait = 0;
+    float deadTime = 0;
     size_t queueLength = dyn_array_size(ready_queue);
     size_t i;
     for (i = 0; i < queueLength; i++)
@@ -55,73 +56,27 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
             if(controlHead->started == false)
             {
                 controlHead->started = true;
-                
                 //calculate the wait time
-                total_Wait += total_Burst - controlHead->arrival;
+                total_Wait += (total_Run - controlHead->arrival);
 
                 // if nothing was in the queue yet after the a process was completed. 
                 // The CPU would be doing nothing but waiting, therefore adding time to the total time to process all the PCBs
-                if(controlHead->arrival > total_Burst)
+                if(controlHead->arrival > total_Run)
                 {
-                    deadTime += controlHead->arrival - total_Burst;
+                    deadTime += (controlHead->arrival - total_Run);
                 }
 
                 // Run the current process and get the burst time aka "run time"
-                total_Burst += controlHead->remaining_burst_time;
-
-                // Remove the process
-                //dyn_array_pop_front(ready_queue);
+                total_Run += (controlHead->remaining_burst_time);
+                total_Turn += total_Run;
             }
         }
     }
-
-    result->average_waiting_time = total_Wait/queueLength;  // wait time = time between arrival of the process and the first time the process is scheduled to run on the CPU
-    result->average_turnaround_time = total_Burst/queueLength; // turnaround time = time a process takes to complete
-    result->total_run_time = total_Burst + deadTime; //total run time = total time for completion
+    result->average_waiting_time = (total_Wait + deadTime) / queueLength;
+    result->average_turnaround_time = total_Turn / queueLength;
+    result->total_run_time = total_Run;
 
     return true;
-
-    //int number_Jobs = 0;
-    // // 1. Use of FIFO queue 
-    // bool flag = true;
-    // do {
-    //     // Execute the front of the queue
-    //     // Grabs the front/first process of the queue
-    //     void* head = dyn_array_front(ready_queue);
-    //     ProcessControlBlock_t * controlHead = (ProcessControlBlock_t *) head;
-    //     if(controlHead->started == false)
-    //     {
-    //         controlHead->started = true;
-            
-    //         //calculate the wait time
-    //         total_Wait += total_Burst - controlHead->arrival;
-
-    //         // if nothing was in the queue yet after the a process was completed. 
-    //         // The CPU would be doing nothing but waiting, therefore adding time to the total time to process all the PCBs
-    //         if(controlHead->arrival > total_Burst)
-    //         {
-    //             deadTime += controlHead->arrival - total_Burst;
-    //         }
-
-    //         // Run the current process and get the burst time aka "run time"
-    //         total_Burst += controlHead->remaining_burst_time;
-
-    //         // Remove the process
-    //         flag = dyn_array_pop_front(ready_queue);
-    //         number_Jobs++;
-    //     }
-    // } while (flag == true && number_Jobs < (int) queue_Size); // Another job in the queue
-    
-    
-    
-    // for(i = 0; i < (ready_queue->size); i++)
-    // {
-    //     void* head = dyn_array_front(ready_queue);
-    //     ready_queue->size;
-    // }
-    // UNUSED(ready_queue);
-    // UNUSED(result);
-    // return false;
 }
 
 bool shortest_job_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
@@ -195,7 +150,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
                 fread(&processes[i].remaining_burst_time, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].priority, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].arrival, sizeof(uint32_t), 1, fp);
-                processes[i].arrival = false;
+                processes[i].started = false;
             }
         }
 
