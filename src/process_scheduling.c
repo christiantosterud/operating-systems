@@ -42,12 +42,15 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
         return false;
     }
 
+    // Timing variables
     float total_Run = 0;
     float total_Turn = 0;
     float total_Wait = 0;
     float deadTime = 0;
+
     size_t queueLength = dyn_array_size(ready_queue);
     size_t i;
+    //Loop through processes
     for (i = 0; i < queueLength; i++)
     {
         void* head = dyn_array_at(ready_queue, i);
