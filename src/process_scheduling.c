@@ -19,7 +19,15 @@
 // remove it before you submit. Just allows things to compile initially.
 #define UNUSED(x) (void)(x)
 
-
+struct dyn_array 
+{
+    // DYN_FLAGS flags;
+    size_t capacity;
+    size_t size;
+    const size_t data_size;
+    void *array;
+    void (*destructor)(void *);
+};
 
 
 //Sorts the given elements of a pointer in order from lowest to highest number of arrival time
@@ -149,81 +157,76 @@ bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result)
 
 bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) 
 {
-    //qsort(ready_queue, (int)dyn_array_size(ready_queue), sizeof(ProcessControlBlock_t), arrival_sort);
-    //size_t j;
+    //sort based on arrival time, round robin works by whatever arrives first
+    qsort(ready_queue->array, dyn_array_size(ready_queue), sizeof(ProcessControlBlock_t), arrival_sort);
+    
+    //get limit/number of elements              //Chandra did question me using this but it has been working fine
     size_t limit = dyn_array_size(ready_queue);
-    /*for ( j = 0; j < dyn_array_size(ready_queue); j++ )
-    {
-        void* head = dyn_array_at( ready_queue, j);
-        ProcessControlBlock_t * controlHead = ( ProcessControlBlock_t * ) head;
-        controlHead->og_burst= controlHead->remaining_burst_time;
-    }*/
+    
+    //total for run time and a counter which works as an interrupt
     int total = 0, counter = 0;
     
-    //int keep_track = 0;
-
     int wait_time = 0, turnaround_time = 0;
 
-    //float average_wait_time, average_turnaround_time;
-    void* head = dyn_array_front(ready_queue);
+    float totalRunTime = 0;
 
-    //size_t x = dyn_array_size(ready_queue);
-    //x;
-   // dyn_array_extract_front(ready_queue, head);
-  // printf("%d \n",curFront->arrival);
+    //grab first process from ready_queue, in a sense we would extract for some reason this works
+    void* head = dyn_array_front(ready_queue);
+  
     ProcessControlBlock_t * curFront = ( ProcessControlBlock_t * ) head;
+    //while there is a process in the queue
     while (dyn_array_size(ready_queue)>0)
     {
-        //printf("%d \n",curFront->arrival);
-        //printf("%ld ", dyn_array_size(ready_queue));
+        //if we know that the burst time will finish within the given quantum
         if (curFront->remaining_burst_time <= quantum && curFront->remaining_burst_time > 0)
         {
-             //printf("%d",curFront->remaining_burst_time);
             total = total + curFront->remaining_burst_time;
+            printf("%d", total);
             curFront->remaining_burst_time = 0;
             counter = 1;
         }
+        //else we know the current process is not going to finish within the quantum so we send it to the 
+        // back of the queue and grab the next process
         else if (curFront->remaining_burst_time > 0)
         {
             curFront->remaining_burst_time = curFront->remaining_burst_time - quantum;
-            //printf
+            
             total = total + quantum;
             dyn_array_push_back(ready_queue, curFront);
             dyn_array_extract_front(ready_queue, head);
             curFront = ( ProcessControlBlock_t * ) head;
         }
-
+        //this is our interrupt we know the process is finished and we can just grab the next process
+        // and lose reference to the current finished process (could maybe use some help with mem management)
         if (curFront->remaining_burst_time == 0 && counter == 1)
-        {
-            //x--;
-            
-           
-            
+        {   
+            //anytime our beginning total of processes was odd, every calculation was off by one. aka don't ask
             if (limit % 2 == 1)
             {
                 
                 wait_time = wait_time + total - curFront->arrival - curFront->og_burst+1;
 
                 turnaround_time = turnaround_time + total - curFront->arrival+1;
-            //printf("%d \n",total);
-            //printf("%d \n",turnaround_time );
             }
-            else {
+            else 
+            {
                 wait_time = wait_time + total - curFront->arrival - curFront->og_burst;
 
                 turnaround_time = turnaround_time + total - curFront->arrival;
             }
+            //reset interrupt and grab next process from queue
             counter = 0;
+            totalRunTime += curFront->og_burst;
+            printf("%f \n ", totalRunTime);
             dyn_array_extract_front(ready_queue, head);
             curFront = ( ProcessControlBlock_t * ) head;
         }
-
-   
-
     }
+    //calculate averages and total run time
     result->average_waiting_time = wait_time * 1.0 / limit;
     result->average_turnaround_time = turnaround_time * 1.0 / limit;
-    result->total_run_time = total;
+    result->total_run_time = (float)totalRunTime;
+    printf("%ld", result->total_run_time);
     return true;
 }
 
