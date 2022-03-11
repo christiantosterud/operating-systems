@@ -89,6 +89,7 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
         return false;
     }
 
+
     // Timing variables
     float total_Run = 0;
     float total_Turn = 0;
@@ -343,7 +344,66 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
 
     UNUSED(ready_queue);
     UNUSED(result);
-    return false;
+    /*
+    if(ready_queue == NULL || result == NULL)
+    {
+        return false;
+    }
+    bool flag = true;
+    uint32_t t = 0;
+    int numJobs = 0;
+    int queue_Size = dyn_array_capacity(ready_queue);
+    //printf("%d", queue_Size);
+    if(queue_Size > (int)sizeof(ProcessControlBlock_t)) qsort(ready_queue, queue_Size, sizeof(ProcessControlBlock_t), arrival_sort);
+    do {
+        ProcessControlBlock_t *head = dyn_array_front(ready_queue);
+        if(head != NULL)
+        {
+            int count = 0;
+            count = arrived_pcbs(head, t, count);
+            while(count <= 0) {
+                t++;
+                count = arrived_pcbs(head, t, count);
+                
+            }
+            if(count > 0) qsort(head, count, sizeof(ProcessControlBlock_t), time_remaining_sort);
+            
+            if(!head->started) {
+                numJobs++;
+                head->started = true;
+                head->timeStarted = t;
+                result->average_waiting_time += (t - head->arrival);
+                virtual_cpu(head);
+                t++;
+                if(head->remaining_burst_time == 0) {
+                    result->average_turnaround_time += (t - head->arrival);
+                    flag = dyn_array_pop_front(ready_queue);
+                }
+            }
+            else if(head->started && head->remaining_burst_time > 0) {
+                virtual_cpu(head);
+                t++;
+                if(head->remaining_burst_time == 0) {
+                    result->average_turnaround_time += (t - head->arrival);
+                    flag = dyn_array_pop_front(ready_queue);
+                }
+            } else {
+                numJobs++;
+                result->average_turnaround_time += (t - head->arrival);
+                flag = dyn_array_pop_front(ready_queue);
+            }
+        }
+        else if(head == NULL) {
+            flag = dyn_array_pop_front(ready_queue);
+        }
+
+    } while(flag == true);
+
+    result->average_turnaround_time = (result->average_turnaround_time / numJobs);
+    result->average_waiting_time = (result->average_waiting_time / numJobs);
+    result->total_run_time = t;
+*/
+    return true;
 }
 
 
