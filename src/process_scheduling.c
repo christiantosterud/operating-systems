@@ -19,6 +19,53 @@
 // remove it before you submit. Just allows things to compile initially.
 #define UNUSED(x) (void)(x)
 
+struct dyn_array 
+{
+    // DYN_FLAGS flags;
+    size_t capacity;
+    size_t size;
+    const size_t data_size;
+    void *array;
+    void (*destructor)(void *);
+};
+
+
+//Sorts the given elements of a pointer in order from lowest to highest number of arrival time
+int arrival_sort(const void * a, const void * b)
+{
+    ProcessControlBlock_t *blockA = (ProcessControlBlock_t *)a;
+    ProcessControlBlock_t *blockB = (ProcessControlBlock_t *)b;
+    return( blockA->arrival - blockB->arrival);
+}
+
+//Sorts the given elements of a pointer in order from lowest to highest number of time remaining
+int time_remaining_sort(const void *a, const void *b)
+{
+    ProcessControlBlock_t *blockA = (ProcessControlBlock_t *)a;
+    ProcessControlBlock_t *blockB = (ProcessControlBlock_t *)b;
+    return( blockA->remaining_burst_time - blockB->remaining_burst_time);
+}
+
+//Sorts the given elements of a pointer in order from lowest to highest number of priority
+int priority_sort(const void *a, const void *b)
+{
+    ProcessControlBlock_t *blockA = (ProcessControlBlock_t *)a;
+    ProcessControlBlock_t *blockB = (ProcessControlBlock_t *)b;
+    return( blockA->priority - blockB->priority);
+}
+
+//Is used after arrival time sort to determine which pcbs have arrived and are ready to be put on to the cpu
+int arrived_pcbs(ProcessControlBlock_t *base, uint32_t t, uint32_t count)
+{
+    if((uint32_t)base->arrival > t) return count;
+    else {
+        count++;
+        base++;
+        return arrived_pcbs(base, t, count);
+    } 
+}
+
+
 // private function
 void virtual_cpu(ProcessControlBlock_t *process_control_block) 
 {
@@ -36,17 +83,22 @@ void virtual_cpu(ProcessControlBlock_t *process_control_block)
  */
 bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
+    // Trying to fix master
     if(ready_queue == NULL || result == NULL)
     {
         return false;
     }
 
+
+    // Timing variables
     float total_Run = 0;
     float total_Turn = 0;
     float total_Wait = 0;
     float deadTime = 0;
+
     size_t queueLength = dyn_array_size(ready_queue);
     size_t i;
+    //Loop through processes
     for (i = 0; i < queueLength; i++)
     {
         void* head = dyn_array_at(ready_queue, i);
@@ -99,13 +151,82 @@ bool priority(dyn_array_t *ready_queue, ScheduleResult_t *result)
 
 bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quantum) 
 {
-    //Need to use the bool started in this algorithm
-    //Chnadra wouldn't use started he would use a something else from the struct
-    //We can create our own variables in the struct
-    UNUSED(ready_queue);
-    UNUSED(result);
-    UNUSED(quantum);
-    return false;
+    if(ready_queue == NULL || result == NULL || quantum <= 0)
+    {
+        return false;
+    }
+
+    //sort based on arrival time, round robin works by whatever arrives first
+    qsort(ready_queue->array, dyn_array_size(ready_queue), sizeof(ProcessControlBlock_t), arrival_sort);
+    
+    //get limit/number of elements              //Chandra did question me using this but it has been working fine
+    size_t limit = dyn_array_size(ready_queue);
+    
+    //a counter which works as an interrupt
+    int total = 0, counter = 0;
+    
+    int wait_time = 0, turnaround_time = 0;
+
+    float totalRunTime = 0;
+
+    //grab first process from ready_queue, in a sense we would extract for some reason this works
+    void* head = dyn_array_front(ready_queue);
+  
+    ProcessControlBlock_t * curFront = ( ProcessControlBlock_t * ) head;
+    //while there is a process in the queue
+    while (dyn_array_size(ready_queue)>0)
+    {
+        //if we know that the burst time will finish within the given quantum
+        if (curFront->remaining_burst_time <= quantum && curFront->remaining_burst_time > 0)
+        {
+            total = total + curFront->remaining_burst_time;
+            //printf("%d", total);
+            curFront->remaining_burst_time = 0;
+            counter = 1;
+        }
+        //else we know the current process is not going to finish within the quantum so we send it to the 
+        // back of the queue and grab the next process
+        else if (curFront->remaining_burst_time > 0)
+        {
+            curFront->remaining_burst_time = curFront->remaining_burst_time - quantum;
+            
+            total = total + quantum;
+            dyn_array_push_back(ready_queue, curFront);
+            dyn_array_extract_front(ready_queue, head);
+            curFront = ( ProcessControlBlock_t * ) head;
+        }
+        //this is our interrupt we know the process is finished and we can just grab the next process
+        // and lose reference to the current finished process (could maybe use some help with mem management)
+        if (curFront->remaining_burst_time == 0 && counter == 1)
+        {   
+            //anytime our beginning total of processes was odd, every calculation was off by one. aka don't ask
+            if (limit % 2 == 1)
+            {
+                
+                wait_time = wait_time + total - curFront->arrival - curFront->og_burst+1;
+
+                turnaround_time = turnaround_time + total - curFront->arrival+1;
+            }
+            else 
+            {
+                wait_time = wait_time + total - curFront->arrival - curFront->og_burst;
+
+                turnaround_time = turnaround_time + total - curFront->arrival;
+            }
+            //reset interrupt and grab next process from queue
+            counter = 0;
+            totalRunTime += curFront->og_burst;
+            //printf("%f \n ", totalRunTime);
+            dyn_array_extract_front(ready_queue, head);
+            curFront = ( ProcessControlBlock_t * ) head;
+        }
+    }
+    //calculate averages and total run time
+    result->average_waiting_time = wait_time * 1.0 / limit;
+    result->average_turnaround_time = turnaround_time * 1.0 / limit;
+    result->total_run_time = (float)totalRunTime;
+    //printf("%ld", result->total_run_time);
+    return true;
 }
 
 // Reads the PCB burst time values from the binary file into ProcessControlBlock_t remaining_burst_time field
@@ -114,7 +235,7 @@ bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quan
 // \return a populated dyn_array of ProcessControlBlocks if function ran successful else NULL for an error
 dyn_array_t *load_process_control_blocks(const char *input_file) 
 {
-    FILE *fp;
+   FILE *fp;
     if (input_file)
     {
         //open the file in read binary mode
@@ -153,6 +274,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
                 fread(&processes[i].priority, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].arrival, sizeof(uint32_t), 1, fp);
                 processes[i].started = false;
+                processes[i].og_burst = processes[i].remaining_burst_time;
             }
         }
         else return NULL;
@@ -166,6 +288,60 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
+    // if(ready_queue == NULL || result == NULL)
+    // {
+    //     return false;
+    // }
+    // int number_Jobs = 0;
+    // int queue_Size = dyn_array_capacity(ready_queue);
+    // //Right now I am using an int that is getting incremented for the time not
+    // //sure if we are supposed to be using an actual timer but the concepts should
+    // //be the same
+    // int t = 0;
+    // bool flag = true;
+    // qsort(ready_queue, queue_Size, sizeof(ProcessControlBlock_t), arrival_sort);
+    // do {
+    //     //Grab the front element in the queue
+    //     ProcessControlBlock_t *head = dyn_array_front(ready_queue);
+
+
+    //     //Count variable is used to indicate how many elements have arrived in the queue
+    //     //based on the current time
+    //     int count = 0;
+
+
+    //     //arrived_pcbs is a recursive call to get the number of elements that have arrived
+    //     count = arrived_pcbs(head, t, count);
+
+
+    //     //qsort will sort the "count" of elements that have arrived
+    //     //and align them based on remaining burst time
+    //     qsort(head, count, sizeof(ProcessControlBlock_t), time_remaining_sort);
+
+
+    //     //Set cur to the element that is ready to get on the cpu and 
+    //     //has the shortest wait time
+    //     ProcessControlBlock_t *cur = (ProcessControlBlock_t *)head;
+
+
+    //     //if(!cur->started) cur->timeStarted = t;
+    //     //Need to setup a variable to track each ones exact start time due to
+    //     // the fact that they will be getting moved on and off of the cpu
+    //     if(cur->remaining_burst_time > 0) virtual_cpu(cur);
+    //     //Need to ask some questions about the rest of this
+    //     else {
+    //         flag = dyn_array_pop_front(ready_queue);
+    //         number_Jobs++;
+    //         t++;
+    //     }
+
+        
+
+    // } while(flag == true && number_Jobs < (int) queue_Size);
+
+
+
+
     UNUSED(ready_queue);
     UNUSED(result);
     /*
@@ -229,3 +405,7 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
 */
     return true;
 }
+
+
+
+

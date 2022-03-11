@@ -14,6 +14,8 @@ struct dyn_array
     const size_t data_size;
     void *array;
     void (*destructor)(void *);
+
+    //int+ n;  keep track of total number of processes
 };
 
 // Supports 64bit+ size_t!
