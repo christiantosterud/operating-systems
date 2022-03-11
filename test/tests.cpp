@@ -161,7 +161,7 @@ TEST (first_come_first_serve, goodInputA)
     // add PCBs now
     ProcessControlBlock_t data[1] = 
     {
-        [0] = {5,2,0,0}
+        [0] = {5,2,0,0,5}
     };
     // back loading dyn_array, pull from the back
     dyn_array_push_back(pcbs,&data[0]);	
@@ -183,9 +183,9 @@ TEST (first_come_first_serve, goodInputB)
     // add PCBs now
     ProcessControlBlock_t data[3] = 
     {
-        [0] = {24,2,0,0},
-        [1] = {3,3,0,0},
-        [2] = {3,1,0,0}
+        [0] = {24,2,0,0,24},
+        [1] = {3,3,0,0,3},
+        [2] = {3,1,0,0,3}
     };
     // back loading dyn_array, pull from the back
     dyn_array_push_back(pcbs,&data[0]);
@@ -209,10 +209,10 @@ TEST (first_come_first_serve, goodInputC)
     // add PCBs now
     ProcessControlBlock_t data[4] = 
     {
-        [0] = {6,3,0,0},
-        [1] = {8,2,0,0},
-        [2] = {7,4,0,0},
-        [3] = {3,1,0,0},
+        [0] = {6,3,0,0,6},
+        [1] = {8,2,0,0,8},
+        [2] = {7,4,0,0,7},
+        [3] = {3,1,0,0,3},
     };
     // back loading dyn_array, pull from the back
     dyn_array_push_back(pcbs,&data[0]);
