@@ -15,6 +15,9 @@ extern "C"
 #define NUM_PCB 30
 #define QUANTUM 5 // Used for Robin Round for process as the run time limit
 
+#define QUANTUM1 4 // Used for Robin Round for process as the run time limit
+#define QUANTUM2 5 // Used for Robin Round for process as the run time limit
+
 unsigned int score;
 unsigned int total;
 
@@ -22,61 +25,108 @@ unsigned int total;
 * LOAD PROCESS CONTROL BLOCKS TESTS
 **/
 
-TEST (load_process_control_blocks, NullInputFileName)
-{
-    const char *input_filename = NULL;
-    dyn_array_t *test = NULL;
-    dyn_array_t *res = load_process_control_blocks(input_filename);
-    ASSERT_EQ(test, res);
+TEST (load_process_control_blocks, NullFilePath) {
+    dyn_array_t *da = load_process_control_blocks(NULL);
+    ASSERT_EQ(da, (dyn_array_t*) NULL);
 }
 
-TEST (load_process_control_blocks, BadInputFilename)
-{
-    const char *input_filename = "/n";
-    dyn_array_t *test = NULL;
-    dyn_array_t *res = load_process_control_blocks(input_filename);
-    ASSERT_EQ(test, res);
+TEST (load_process_control_blocks, TrickyBadFileName) {
+    const char *filename = "";
+    dyn_array_t *da = load_process_control_blocks(filename);
+    ASSERT_EQ(da, (dyn_array_t*) NULL);
 }
 
-TEST (load_process_control_blocks, NonExistingInputFilename)
-{
-    const char *input_filename = "nafile.binary";
-    dyn_array_t *test = NULL;
-    dyn_array_t *res = load_process_control_blocks(input_filename);
-    ASSERT_EQ(test, res);
+TEST (load_process_control_blocks, TrickyBadFileNameNewLine) {
+    const char *filename = "\n";
+    dyn_array_t *da = load_process_control_blocks(filename);
+    ASSERT_EQ(da, (dyn_array_t*) NULL);
 }
 
-// TEST (load_process_control_blocks, GoodFileInput)
-// {
-//      const char *input_filename = "pcb.bin";
+TEST (load_process_control_blocks, EmptyFile) {
+    const char *filename = "JIMRTESTANSWERS.JK"; 
+    int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH);
+    close(fd);
+    dyn_array_t *da = load_process_control_blocks(filename);
+    ASSERT_EQ(da, (dyn_array_t*) NULL);
+}
 
-//     //test file
-//     uint32_t burst_time_values[NUM_PCB];
-//     uint32_t i;
-//     for ( i = 0; i < NUM_PCB; ++i )
-//     {
-//         // sets burst_time_values[i] to a random number in the range from 1 - 15
-//         burst_time_values[i] = rand() % 15 + 1;
-//     }
-//     int fd = open( input_filename, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH );
-//     write( fd, ( const void* ) NUM_PCB, sizeof( uint32_t ) );
-//     write( fd, &burst_time_values, NUM_PCB * sizeof( uint32_t ) );
-//     close( fd );
+TEST (load_process_control_blocks, nullFilePath) 
+{
+    dyn_array_t* da = load_process_control_blocks (NULL);
+    ASSERT_EQ(da,(dyn_array_t*) NULL);
 
-//     //call to load_process_control_blocks to compare the file written above
-//     dyn_array_t *res = load_process_control_blocks( input_filename );
-//     ASSERT_NE( res, ( dyn_array_t* ) NULL );
-//     size_t j;
-//     for ( j = 0; j < dyn_array_size( res ); j++)
-//     {
-//         uint32_t* grab_first_triple_at_j = ( uint32_t* ) dyn_array_at( res, j );
-//         EXPECT_EQ( *grab_first_triple_at_j, burst_time_values[ j ] );
-//     }
+    score+=5;
+}
 
-//     //destroy/free dynamic array from test
-//     dyn_array_destroy( res );
-//     score += 10;
-// }
+TEST (load_process_control_blocks, notFoundFile) 
+{
+    dyn_array_t* da = load_process_control_blocks ("NotARealFile.Awesome");
+    ASSERT_EQ(da,(dyn_array_t*)NULL);
+
+    score+=5;
+}
+
+TEST (load_process_control_blocks, emptyFoundFile) 
+{
+    const char* fname = "EMPTYFILE.DARN";
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+    int flags = O_CREAT | O_TRUNC | O_WRONLY;
+    int fd = open(fname, flags, mode);
+    close(fd);
+    dyn_array_t* da = load_process_control_blocks (fname);
+    ASSERT_EQ(da,(dyn_array_t*)NULL);
+
+    score+=5;
+}
+
+TEST (load_process_control_blocks, incorrectPCBFoundFile) 
+{
+    const char* fname = "CANYOUHANDLETHE.TRUTH";
+    uint32_t pcb_num = 10;
+    uint32_t pcbs[5][3] = {{1,1,1},{2,2,2},{3,3,3},{4,4,4},{5,5,5}};
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+    int flags = O_CREAT | O_TRUNC | O_WRONLY;
+    int fd = open(fname, flags, mode);
+    write(fd,&pcb_num,sizeof(uint32_t));
+    write(fd,pcbs,5 * sizeof(uint32_t)*3);
+    close(fd);
+    dyn_array_t* da = load_process_control_blocks (fname);
+    ASSERT_EQ(da,(dyn_array_t*)NULL);
+
+    score+=5;
+}
+
+TEST (load_process_control_blocks, fullFoundFile) 
+{
+    const char* fname = "PCBs.bin";
+    uint32_t pcb_num = NUM_PCB;
+    uint32_t pcbs[NUM_PCB][3];
+    for (uint32_t p = 0; p < pcb_num; ++p) 
+    {
+        pcbs[p][0] = rand() % 35 + 1;
+        //        printf("%d, ", pcbs[p][0]);
+        pcbs[p][1] = p;
+        pcbs[p][2] = p;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+    int flags = O_CREAT | O_TRUNC | O_WRONLY;
+    int fd = open(fname, flags, mode);
+    write(fd,&pcb_num,sizeof(uint32_t));
+    write(fd,pcbs,pcb_num * sizeof(uint32_t)*3);
+    close(fd);
+    dyn_array_t* da = load_process_control_blocks (fname);
+    ASSERT_NE(da, (dyn_array_t*) NULL);
+    for (size_t i = 0; i < dyn_array_size(da); ++i) 
+    {
+        ProcessControlBlock_t * pPCB = (ProcessControlBlock_t *)dyn_array_at(da, i);
+        ASSERT_EQ(pPCB->remaining_burst_time, pcbs[i][0]);
+        ASSERT_EQ(pPCB->priority, pcbs[i][1]);
+        ASSERT_EQ(pPCB->arrival, pcbs[i][2]);
+    }
+    dyn_array_destroy(da);
+
+    score+=10;
+}
 
 
 /*
@@ -195,6 +245,96 @@ TEST(round_robin , ZeroQuantum){
     dyn_array_destroy(da);
     delete sr;
 }
+
+TEST (round_robin, ourTest) 
+{
+    ScheduleResult_t *sr = new ScheduleResult_t;
+    dyn_array_t* pcbs = dyn_array_create(0,sizeof(ProcessControlBlock_t),NULL);
+    memset(sr,0,sizeof(ScheduleResult_t));
+    // add PCBs now
+    ProcessControlBlock_t data[4] = 
+    {
+        [0] = {15,0,0,0,15},
+        [1] = {10,0,1,0,10},
+        [2] = {5,0,2,0,5},
+        [3] = {20,0,3,0,20}
+    };
+    // back loading dyn_array, pull from the back
+    dyn_array_push_back(pcbs,&data[3]);
+    dyn_array_push_back(pcbs,&data[2]);
+    dyn_array_push_back(pcbs,&data[1]);     
+    dyn_array_push_back(pcbs,&data[0]); 
+    bool res = round_robin (pcbs,sr,4);  
+    ASSERT_EQ(true,res);
+    float answers[3] = {36.5,24,50};
+    ASSERT_FLOAT_EQ(answers[0],sr->average_turnaround_time);
+    ASSERT_EQ(answers[1],sr->average_waiting_time);
+    ASSERT_EQ(answers[2],sr->total_run_time);
+    dyn_array_destroy(pcbs);
+    delete sr;
+
+    score+=20;
+} 
+
+TEST (round_robin, Test3Processes) 
+{
+    ScheduleResult_t *sr = new ScheduleResult_t;
+    dyn_array_t* pcbs = dyn_array_create(0,sizeof(ProcessControlBlock_t),NULL);
+    memset(sr,0,sizeof(ScheduleResult_t));
+    // add PCBs now
+    ProcessControlBlock_t data[3] = 
+    {
+        [0] = {10,0,1,0,10},
+        [1] = {5,0,2,0,5},
+        [2] = {20,0,3,0,20}
+    };
+    // back loading dyn_array, pull from the back
+    dyn_array_push_back(pcbs,&data[2]);
+    dyn_array_push_back(pcbs,&data[1]);     
+    dyn_array_push_back(pcbs,&data[0]); 
+    bool res = round_robin (pcbs,sr,4);  
+    ASSERT_EQ(true,res);
+    float answers[3] = {24,12.333333,35};
+    ASSERT_FLOAT_EQ(answers[0],sr->average_turnaround_time);
+    ASSERT_EQ(answers[1],sr->average_waiting_time);
+    ASSERT_EQ(answers[2],sr->total_run_time);
+    dyn_array_destroy(pcbs);
+    delete sr;
+
+    score+=20;
+} 
+
+TEST (round_robin, Test5Processes) 
+{
+    ScheduleResult_t *sr = new ScheduleResult_t;
+    dyn_array_t* pcbs = dyn_array_create(0,sizeof(ProcessControlBlock_t),NULL);
+    memset(sr,0,sizeof(ScheduleResult_t));
+    // add PCBs now
+    ProcessControlBlock_t data[5] = 
+    {
+        [0] = {10,0,1,0,10},
+        [1] = {5,0,2,0,5},
+        [2] = {20,0,3,0,20},
+        [3] = {24,0,4,0,24},
+        [4] = {3,0,5,0,3}
+    };
+    // back loading dyn_array, pull from the back
+    dyn_array_push_back(pcbs,&data[4]);
+    dyn_array_push_back(pcbs,&data[3]);
+    dyn_array_push_back(pcbs,&data[2]);
+    dyn_array_push_back(pcbs,&data[1]);     
+    dyn_array_push_back(pcbs,&data[0]); 
+    bool res = round_robin (pcbs,sr,4);  
+    ASSERT_EQ(true,res);
+    float answers[3] = {36.6,24.2,62};
+    ASSERT_FLOAT_EQ(answers[0],sr->average_turnaround_time);
+    ASSERT_EQ(answers[1],sr->average_waiting_time);
+    ASSERT_EQ(answers[2],sr->total_run_time);
+    dyn_array_destroy(pcbs);
+    delete sr;
+
+    score+=20;
+} 
 
 
 /*
