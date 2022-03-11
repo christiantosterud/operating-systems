@@ -163,7 +163,7 @@ bool round_robin(dyn_array_t *ready_queue, ScheduleResult_t *result, size_t quan
     //get limit/number of elements              //Chandra did question me using this but it has been working fine
     size_t limit = dyn_array_size(ready_queue);
     
-    //total for run time and a counter which works as an interrupt
+    //a counter which works as an interrupt
     int total = 0, counter = 0;
     
     int wait_time = 0, turnaround_time = 0;
@@ -275,6 +275,7 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
                 fread(&processes[i].priority, sizeof(uint32_t), 1, fp);
                 fread(&processes[i].arrival, sizeof(uint32_t), 1, fp);
                 processes[i].started = false;
+                processes[i].og_burst = processes[i].remaining_burst_time;
             }
         }
         else return NULL;
