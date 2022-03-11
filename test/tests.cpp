@@ -15,6 +15,9 @@ extern "C"
 #define NUM_PCB 30
 #define QUANTUM 5 // Used for Robin Round for process as the run time limit
 
+#define QUANTUM1 4 // Used for Robin Round for process as the run time limit
+#define QUANTUM2 5 // Used for Robin Round for process as the run time limit
+
 unsigned int score;
 unsigned int total;
 
@@ -22,61 +25,60 @@ unsigned int total;
 * LOAD PROCESS CONTROL BLOCKS TESTS
 **/
 
-TEST (load_process_control_blocks, NullInputFileName)
-{
-    const char *input_filename = NULL;
-    dyn_array_t *test = NULL;
-    dyn_array_t *res = load_process_control_blocks(input_filename);
-    ASSERT_EQ(test, res);
+TEST (load_process_control_blocks, NullFilePath) {
+    dyn_array_t *da = load_process_control_blocks(NULL);
+    ASSERT_EQ(da, (dyn_array_t*) NULL);
 }
 
-TEST (load_process_control_blocks, BadInputFilename)
-{
-    const char *input_filename = "/n";
-    dyn_array_t *test = NULL;
-    dyn_array_t *res = load_process_control_blocks(input_filename);
-    ASSERT_EQ(test, res);
+TEST (load_process_control_blocks, TrickyBadFileName) {
+    const char *filename = "";
+    dyn_array_t *da = load_process_control_blocks(filename);
+    ASSERT_EQ(da, (dyn_array_t*) NULL);
 }
 
-TEST (load_process_control_blocks, NonExistingInputFilename)
-{
-    const char *input_filename = "nafile.binary";
-    dyn_array_t *test = NULL;
-    dyn_array_t *res = load_process_control_blocks(input_filename);
-    ASSERT_EQ(test, res);
+TEST (load_process_control_blocks, TrickyBadFileNameNewLine) {
+    const char *filename = "\n";
+    dyn_array_t *da = load_process_control_blocks(filename);
+    ASSERT_EQ(da, (dyn_array_t*) NULL);
 }
 
-// TEST (load_process_control_blocks, GoodFileInput)
-// {
-//      const char *input_filename = "pcb.bin";
+TEST (load_process_control_blocks, EmptyFile) {
+    const char *filename = "JIMRTESTANSWERS.JK"; 
+    int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH);
+    close(fd);
+    dyn_array_t *da = load_process_control_blocks(filename);
+    ASSERT_EQ(da, (dyn_array_t*) NULL);
+}
 
-//     //test file
-//     uint32_t burst_time_values[NUM_PCB];
-//     uint32_t i;
-//     for ( i = 0; i < NUM_PCB; ++i )
-//     {
-//         // sets burst_time_values[i] to a random number in the range from 1 - 15
-//         burst_time_values[i] = rand() % 15 + 1;
-//     }
-//     int fd = open( input_filename, O_RDWR | O_CREAT, S_IRUSR | S_IRGRP | S_IROTH );
-//     write( fd, ( const void* ) NUM_PCB, sizeof( uint32_t ) );
-//     write( fd, &burst_time_values, NUM_PCB * sizeof( uint32_t ) );
-//     close( fd );
+TEST (load_process_control_blocks, nullFilePath) 
+{
+    dyn_array_t* da = load_process_control_blocks (NULL);
+    ASSERT_EQ(da,(dyn_array_t*) NULL);
 
-//     //call to load_process_control_blocks to compare the file written above
-//     dyn_array_t *res = load_process_control_blocks( input_filename );
-//     ASSERT_NE( res, ( dyn_array_t* ) NULL );
-//     size_t j;
-//     for ( j = 0; j < dyn_array_size( res ); j++)
-//     {
-//         uint32_t* grab_first_triple_at_j = ( uint32_t* ) dyn_array_at( res, j );
-//         EXPECT_EQ( *grab_first_triple_at_j, burst_time_values[ j ] );
-//     }
+    score+=5;
+}
 
-//     //destroy/free dynamic array from test
-//     dyn_array_destroy( res );
-//     score += 10;
-// }
+TEST (load_process_control_blocks, notFoundFile) 
+{
+    dyn_array_t* da = load_process_control_blocks ("NotARealFile.Awesome");
+    ASSERT_EQ(da,(dyn_array_t*)NULL);
+
+    score+=5;
+}
+
+TEST (load_process_control_blocks, emptyFoundFile) 
+{
+    const char* fname = "EMPTYFILE.DARN";
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+    int flags = O_CREAT | O_TRUNC | O_WRONLY;
+    int fd = open(fname, flags, mode);
+    close(fd);
+    dyn_array_t* da = load_process_control_blocks (fname);
+    ASSERT_EQ(da,(dyn_array_t*)NULL);
+
+    score+=5;
+}
+
 
 
 /*
@@ -169,7 +171,7 @@ TEST (priority, NullResult)
 /*
 * ROUND ROBIN TESTS
 **/
-
+/*
 TEST (round_robin, NullQueue) 
 {
     dyn_array_t *readyqueue = NULL;
@@ -195,6 +197,8 @@ TEST(round_robin , ZeroQuantum){
     dyn_array_destroy(da);
     delete sr;
 }
+*/
+
 
 
 /*
