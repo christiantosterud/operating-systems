@@ -147,7 +147,7 @@ TEST (first_come_first_serve, goodInputB)
     delete sr;
 }
 
-TEST (first_come_first_serve, goodInputC) 
+TEST (first_come_first_serve, four_Process) 
 {
     ScheduleResult_t *sr = new ScheduleResult_t;
     dyn_array_t* pcbs = dyn_array_create(0,sizeof(ProcessControlBlock_t),NULL);
@@ -168,6 +168,35 @@ TEST (first_come_first_serve, goodInputC)
     bool res = first_come_first_serve (pcbs,sr);	
     ASSERT_EQ(true,res);
     float answers[3] = {16.25,10.25,24};
+    ASSERT_EQ(answers[0],sr->average_turnaround_time);
+    ASSERT_EQ(answers[1],sr->average_waiting_time);
+    ASSERT_EQ(answers[2],sr->total_run_time);
+    dyn_array_destroy(pcbs);
+    delete sr;
+}
+
+TEST (first_come_first_serve, five_Process) 
+{
+    ScheduleResult_t *sr = new ScheduleResult_t;
+    dyn_array_t* pcbs = dyn_array_create(0,sizeof(ProcessControlBlock_t),NULL);
+    memset(sr,0,sizeof(ScheduleResult_t));
+    // add PCBs now
+    ProcessControlBlock_t data[5] = 
+    {
+        [0] = {6,3,0,0},
+        [1] = {8,2,0,0},
+        [2] = {7,4,0,0},
+        [3] = {3,1,0,0},
+        [4] = {5,2,0,0},
+    };
+    // back loading dyn_array, pull from the back
+    dyn_array_push_back(pcbs,&data[0]);
+    dyn_array_push_back(pcbs,&data[1]);
+    dyn_array_push_back(pcbs,&data[2]);		
+    dyn_array_push_back(pcbs,&data[3]);	
+    bool res = first_come_first_serve (pcbs,sr);	
+    ASSERT_EQ(true,res);
+    float answers[3] = {18.8,13,29};
     ASSERT_EQ(answers[0],sr->average_turnaround_time);
     ASSERT_EQ(answers[1],sr->average_waiting_time);
     ASSERT_EQ(answers[2],sr->total_run_time);
