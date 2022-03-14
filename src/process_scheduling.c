@@ -57,13 +57,22 @@ int priority_sort(const void *a, const void *b)
 //Is used after arrival time sort to determine which pcbs have arrived and are ready to be put on to the cpu
 int arrived_pcbs(ProcessControlBlock_t *base, uint32_t t, uint32_t count)
 {
-    if((uint32_t)base->arrival > t) return count;
-    else {
-        count++;
-        base++;
-        return arrived_pcbs(base, t, count);
-    } 
+    ProcessControlBlock_t *cur = base;
+    bool exitFlag = false;
+    while(!exitFlag) {   
+        if(cur->arrival <= t) {
+            count++;
+            cur++;
+            if(cur->arrival > t || cur == NULL) {
+                return count;
+            }
+        } else {
+            break;
+        }
+    }
+    return count;
 }
+
 
 
 // private function
