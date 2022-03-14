@@ -133,9 +133,47 @@ bool first_come_first_serve(dyn_array_t *ready_queue, ScheduleResult_t *result)
 
 bool shortest_job_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    UNUSED(ready_queue);
-    UNUSED(result);
-    return false;   
+    if(ready_queue == NULL || result == NULL)
+    {
+        return false;
+    }
+    int numJobs = 0;
+    int t = 0;
+    bool flag = true;
+    int count;
+    bool arrivalSort = dyn_array_sort(ready_queue, arrival_sort);
+    do {
+  
+        ProcessControlBlock_t *head = dyn_array_front(ready_queue);
+        if(head != NULL && arrivalSort) {
+            count = 0;
+            count = arrived_pcbs(head, t, count);
+            if(count > 0) {
+                qsort(head, count, sizeof(ProcessControlBlock_t), time_remaining_sort);
+                result->average_waiting_time += ((float)t - head->arrival);
+                while(head->remaining_burst_time > 0) {
+                    virtual_cpu(head);
+                    t++;
+                }
+                result->average_turnaround_time += ((float)t - head->arrival);
+                numJobs++;
+                flag = dyn_array_pop_front(ready_queue);
+            } else {
+                t++;
+            }
+        } else {
+            flag = dyn_array_pop_front(ready_queue);
+        }
+
+
+    } while(flag == true);
+
+
+    result->average_turnaround_time = (result->average_turnaround_time / numJobs);
+    result->average_waiting_time = (result->average_waiting_time / numJobs);
+    result->total_run_time = t;
+
+    return true;  
 }
 
 /**
@@ -288,98 +326,53 @@ dyn_array_t *load_process_control_blocks(const char *input_file)
 
 bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *result) 
 {
-    // if(ready_queue == NULL || result == NULL)
-    // {
-    //     return false;
-    // }
-    // int number_Jobs = 0;
-    // int queue_Size = dyn_array_capacity(ready_queue);
-    // //Right now I am using an int that is getting incremented for the time not
-    // //sure if we are supposed to be using an actual timer but the concepts should
-    // //be the same
-    // int t = 0;
-    // bool flag = true;
-    // qsort(ready_queue, queue_Size, sizeof(ProcessControlBlock_t), arrival_sort);
-    // do {
-    //     //Grab the front element in the queue
-    //     ProcessControlBlock_t *head = dyn_array_front(ready_queue);
-
-
-    //     //Count variable is used to indicate how many elements have arrived in the queue
-    //     //based on the current time
-    //     int count = 0;
-
-
-    //     //arrived_pcbs is a recursive call to get the number of elements that have arrived
-    //     count = arrived_pcbs(head, t, count);
-
-
-    //     //qsort will sort the "count" of elements that have arrived
-    //     //and align them based on remaining burst time
-    //     qsort(head, count, sizeof(ProcessControlBlock_t), time_remaining_sort);
-
-
-    //     //Set cur to the element that is ready to get on the cpu and 
-    //     //has the shortest wait time
-    //     ProcessControlBlock_t *cur = (ProcessControlBlock_t *)head;
-
-
-    //     //if(!cur->started) cur->timeStarted = t;
-    //     //Need to setup a variable to track each ones exact start time due to
-    //     // the fact that they will be getting moved on and off of the cpu
-    //     if(cur->remaining_burst_time > 0) virtual_cpu(cur);
-    //     //Need to ask some questions about the rest of this
-    //     else {
-    //         flag = dyn_array_pop_front(ready_queue);
-    //         number_Jobs++;
-    //         t++;
-    //     }
-
-        
-
-    // } while(flag == true && number_Jobs < (int) queue_Size);
-
-
-
-
-    UNUSED(ready_queue);
-    UNUSED(result);
-    /*
+    //Null Check
     if(ready_queue == NULL || result == NULL)
     {
         return false;
     }
+    //Set all variables needed for calculations
     bool flag = true;
     uint32_t t = 0;
     int numJobs = 0;
     int queue_Size = dyn_array_capacity(ready_queue);
-    //printf("%d", queue_Size);
+    //Check to see if the size of the queue is atleast one ProcessControlBlock and if so sort it by arrival times
     if(queue_Size > (int)sizeof(ProcessControlBlock_t)) qsort(ready_queue, queue_Size, sizeof(ProcessControlBlock_t), arrival_sort);
     do {
+        //Set head to the front of ready_queue
         ProcessControlBlock_t *head = dyn_array_front(ready_queue);
+        //Have to use this check to realize when we are at the end of the elements
         if(head != NULL)
         {
+            //Count returns how many elements have "arrived"
             int count = 0;
             count = arrived_pcbs(head, t, count);
+            //If no elements have arrived increment time to account for it
             while(count <= 0) {
                 t++;
                 count = arrived_pcbs(head, t, count);
                 
             }
+            //If count is bigger than zero we can sort head by remaining burst time
             if(count > 0) qsort(head, count, sizeof(ProcessControlBlock_t), time_remaining_sort);
             
+            //If the current PCB has not been started add its wait time to the avg_wait time and increase number of jobs
+            //Then increment time
             if(!head->started) {
                 numJobs++;
                 head->started = true;
-                head->timeStarted = t;
                 result->average_waiting_time += (t - head->arrival);
                 virtual_cpu(head);
                 t++;
+                //Check to see if this PCB has any remaining burst time
+                //If it doesn't pop it off the front and increment the turnaround time
                 if(head->remaining_burst_time == 0) {
                     result->average_turnaround_time += (t - head->arrival);
                     flag = dyn_array_pop_front(ready_queue);
                 }
             }
+            //If the head has started we need to run it through the virtual CPU
+            //Increment time and check to see if it has any remaining burst time
             else if(head->started && head->remaining_burst_time > 0) {
                 virtual_cpu(head);
                 t++;
@@ -387,12 +380,14 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
                     result->average_turnaround_time += (t - head->arrival);
                     flag = dyn_array_pop_front(ready_queue);
                 }
+                //Signifies that the PCB has no remaining burst time and needs to be popped off
+                //increment turnaround time
             } else {
-                numJobs++;
                 result->average_turnaround_time += (t - head->arrival);
                 flag = dyn_array_pop_front(ready_queue);
             }
         }
+        //If the head is null then we have reached the end and flag will be set to false
         else if(head == NULL) {
             flag = dyn_array_pop_front(ready_queue);
         }
@@ -401,8 +396,8 @@ bool shortest_remaining_time_first(dyn_array_t *ready_queue, ScheduleResult_t *r
 
     result->average_turnaround_time = (result->average_turnaround_time / numJobs);
     result->average_waiting_time = (result->average_waiting_time / numJobs);
-    result->total_run_time = t;
-*/
+    result->total_run_time = t - 1;
+
     return true;
 }
 
